@@ -1,0 +1,267 @@
+
+1. 参考
+2. 源码编译
+3. my.cnf 文件
+4. 初始化
+4.1 my.cnf 读取顺序
+4.2 初始化日志信息
+5. 启动mysql
+6. 查看堆栈
+7. 更改密码
+8. undo log
+
+
+
+1. 参考
+Linux 源码安装MySQL5.7
+https://blog.csdn.net/qq_23033339/article/details/80872136
+
+Linux下源码安装MySQL5.6.30
+https://www.linuxidc.com/Linux/2018-08/153813.htm
+
+MySQL 5.7 新特性之初始化
+https://www.cnblogs.com/rayment/p/7240562.html
+
+2. 源码编译
+mkdir build5726
+
+其中  ../mysql-5.7.26  这个是源码目录位置， 最后 -DWITH_EMBEDDED_SERVER=off 若为1 则会编译出错，暂时设置为off
+[wl@host122 build5726]$ pwd
+/home/wl/software/build5726
+[wl@host122 build5726]$ cat auto.sh 
+cmake ../mysql-5.7.26 -DCMAKE_INSTALL_PREFIX=/home/wl/install/install5726 \
+-DMYSQL_DATADIR=/home/wl/mysqlcluster/app5726/data \
+-DDOWNLOAD_BOOST=1 \
+-DWITH_BOOST=/home/wl/mysqlcluster/app5726/boost1590 \
+-DSYSCONFDIR=/home/wl/software/sysconfdir \
+-DWITH_INNOBASE_STORAGE_ENGINE=1 \
+-DWITH_PARTITION_STORAGE_ENGINE=1 \
+-DWITH_FEDERATED_STORAGE_ENGINE=1 \
+-DWITH_BLACKHOLE_STORAGE_ENGINE=1 \
+-DWITH_MYISAM_STORAGE_ENGINE=1 \
+-DENABLED_LOCAL_INFILE=1 \
+-DENABLE_DTRACE=0 \
+-DDEFAULT_CHARSET=utf8mb4 \
+-DDEFAULT_COLLATION=utf8mb4_general_ci \
+-DWITH_EMBEDDED_SERVER=off
+
+make
+make install
+
+
+
+3. my.cnf 文件
+位置 SYSCONFDIR=/home/wl/software/sysconfdir
+---
+[client]
+port = 3306
+socket = /tmp/wl/mysql.sock
+default-character-set = utf8mb4
+[mysqld]
+port = 3306
+socket = /tmp/wl/mysql.sock
+basedir = /home/wl/install/install5726
+datadir = /home/wl/mysqlcluster/app5726/data
+pid-file = /home/wl/mysqlcluster/app5726/mysql.pid
+
+innodb_undo_directory=/home/wl/mysqlcluster/app5726/undo
+innodb_undo_tablespaces=4
+innodb_undo_log_truncate=1
+innodb_undo_logs=128
+
+innodb_log_group_home_dir=/home/wl/mysqlcluster/app5726/redo
+innodb_log_files_in_group = 3
+
+log-bin=/home/wl/mysqlcluster/app5726/binlog
+binlog-do-db = db1
+binlog-do-db = db2
+binlog-do-db = db3
+binlog-ignore-db = mysql
+
+user = wl
+bind-address = 0.0.0.0
+server-id = 1
+init-connect = 'SET NAMES utf8mb4'
+character-set-server = utf8mb4
+#skip-grant-tables
+#skip-name-resolve
+#skip-networking
+back_log = 300
+max_connections = 1000
+max_connect_errors = 6000
+open_files_limit = 65535
+table_open_cache = 128
+max_allowed_packet = 4M
+binlog_cache_size = 1M
+max_heap_table_size = 8M
+tmp_table_size = 16M
+read_buffer_size = 2M
+read_rnd_buffer_size = 8M
+sort_buffer_size = 8M
+join_buffer_size = 8M
+key_buffer_size = 4M
+thread_cache_size = 8
+query_cache_type = 1
+query_cache_size = 8M
+query_cache_limit = 2M
+ft_min_word_len = 4
+log_bin = mysql-bin
+binlog_format = mixed
+expire_logs_days = 30
+log_error = /home/wl/mysqlcluster/app5726/log/mysql-error.log
+slow_query_log = 1
+long_query_time = 1
+slow_query_log_file = /home/wl/mysqlcluster/app5726/slowlog/mysql-slow.log
+performance_schema = 0
+explicit_defaults_for_timestamp
+#lower_case_table_names = 1
+skip-external-locking
+default_storage_engine = InnoDB
+#default-storage-engine = MyISAM
+innodb_file_per_table = 1
+innodb_open_files = 500
+innodb_buffer_pool_size = 64M
+innodb_write_io_threads = 4
+innodb_read_io_threads = 4
+innodb_thread_concurrency = 0
+innodb_purge_threads = 1
+innodb_flush_log_at_trx_commit = 2
+innodb_log_buffer_size = 2M
+innodb_log_file_size = 32M
+innodb_log_files_in_group = 3
+innodb_max_dirty_pages_pct = 90
+innodb_lock_wait_timeout = 120
+bulk_insert_buffer_size = 8M
+myisam_sort_buffer_size = 8M
+myisam_max_sort_file_size = 10G
+myisam_repair_threads = 1
+interactive_timeout = 28800
+wait_timeout = 28800
+[mysqldump]
+quick
+max_allowed_packet = 16M
+[myisamchk]
+key_buffer_size = 8M
+sort_buffer_size = 8M
+read_buffer = 4M
+write_buffer = 4M
+
+
+将上面的内容 放在 /home/wl/software/sysconfdir  文件夹下
+datadir 在数据库初始化时必须为空
+
+-- 
+[wl@host122 ~]$ cat cleanmysql.sh 
+mkdir -p ~/mysqlcluster/app5726
+mkdir -p /tmp/wl
+
+rm -rf ~/mysqlcluster/app5726/*
+rm -rf /tmp/wl/mysql.sock
+rm -rf /tmp/wl/mysql.sock.lock
+
+mkdir -p  ~/mysqlcluster/boost1590
+mkdir -p  ~/mysqlcluster/app5726/data
+mkdir -p  ~/mysqlcluster/app5726/log
+mkdir -p  ~/mysqlcluster/app5726/slowlog
+mkdir /home/wl/mysqlcluster/app5726/redo
+mkdir /home/wl/mysqlcluster/app5726/undo
+mkdir /home/wl/mysqlcluster/app5726/binlog
+
+
+
+参考：
+https://www.cnblogs.com/sjshare/p/6897994.html
+https://www.cnblogs.com/yxr2005503/p/9378275.html
+
+4. 初始化
+mysql_install_db --user=wl --basedir=/home/wl/install/install5726 --datadir=/home/wl/mysqlcluster/app5726/data  --defaults-file=/home/wl/software/sysconfdir/my.cnf    --pid-file=/home/wl/mysqlcluster/app5726/mysql.pid --socket=/tmp/wl/mysql.sock
+
+[wl@host122 data5726]$  mysql_install_db --defaults-file=/home/wl/software/sysconfdir/my.cnf  
+2019-06-21 16:18:16 [WARNING] mysql_install_db is deprecated. Please consider switching to mysqld --initialize
+已经不建议使用mysql_install_db， 改为 mysqld --initialize 
+
+改用 mysqld 
+
+ mysqld  --defaults-file=/home/wl/software/sysconfdir/my.cnf  --initialize --user=wl --basedir=/home/wl/install/install5726 --datadir=/home/wl/mysqlcluster/app5726/data     --pid-file=/home/wl/mysqlcluster/app5726/mysql.pid --socket=/tmp/wl/mysql.sock --log-bin=/home/wl/mysqlcluster/app5726/binlog/binlog
+
+4.1 my.cnf 读取顺序
+mysql --help
+Default options are read from the following files in the given order:
+  /etc/my.cnf /etc/mysql/my.cnf /home/wl/software/sysconfdir/my.cnf ~/.my.cnf
+
+
+4.2 初始化日志信息
+默认的密码：
+[wl@host122 data5726]$ cat   ../log/mysql-error.log 
+2019-06-21T08:36:02.842719Z 0 [Warning] InnoDB: New log files created, LSN=45790
+2019-06-21T08:36:02.892529Z 0 [Warning] InnoDB: Creating foreign key constraint system tables.
+mysqld: File '/home/wl/mysqlcluster/slowlog/mysql-slow.log' not found (Errcode: 2 - No such file or directory)
+2019-06-21T08:36:02.944792Z 0 [ERROR] Could not use /home/wl/mysqlcluster/slowlog/mysql-slow.log for logging (error 2 - No such file or directory). Turning logging off for the server process. To turn it on again: fix the cause, then either restart the query logging by using "SET GLOBAL SLOW_QUERY_LOG=ON" or restart the MySQL server.
+2019-06-21T08:36:02.949962Z 0 [Warning] No existing UUID has been found, so we assume that this is the first time that this server has been started. Generating a new UUID: 9a7f7862-93ff-11e9-bdde-fa163ec3ee8a.
+2019-06-21T08:36:02.951391Z 0 [Warning] Gtid table is not ready to be used. Table 'mysql.gtid_executed' cannot be opened.
+2019-06-21T08:36:02.953214Z 1 [Note] A temporary password is generated for root@localhost: b.tzZ1wNmZ*p
+
+初始化后的内容：
+[wl@host122 data5726]$ ll
+total 110636
+-rw-r----- 1 wl wl       56 Jun 21 16:36 auto.cnf
+-rw-r----- 1 wl wl      419 Jun 21 16:36 ib_buffer_pool
+-rw-r----- 1 wl wl 12582912 Jun 21 16:36 ibdata1
+-rw-r----- 1 wl wl 33554432 Jun 21 16:36 ib_logfile0
+-rw-r----- 1 wl wl 33554432 Jun 21 16:36 ib_logfile1
+-rw-r----- 1 wl wl 33554432 Jun 21 16:36 ib_logfile2
+drwxr-x--- 2 wl wl     4096 Jun 21 16:36 mysql
+-rw-r----- 1 wl wl      177 Jun 21 16:36 mysql-bin.000001
+-rw-r----- 1 wl wl       19 Jun 21 16:36 mysql-bin.index
+drwxr-x--- 2 wl wl     8192 Jun 21 16:36 performance_schema
+drwxr-x--- 2 wl wl     8192 Jun 21 16:36 sys
+[wl@host122 data5726]$ cat auto.cnf 
+[auto]
+server-uuid=9a7f7862-93ff-11e9-bdde-fa163ec3ee8a
+
+--
+
+5. 启动mysql  
+mysqld --defaults-file=/home/wl/software/sysconfdir/my.cnf  &
+查看进程
+[wl@host122 log]$ ps xuf
+USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+wl       22565  0.0  0.1 116628  3360 pts/2    S+   16:42   0:00 -bash
+wl        5272  0.0  0.1 116856  3056 pts/1    S    15:36   0:00 -bash
+wl       22719  1.7  1.4 877436 26820 pts/1    Sl   16:44   0:00  \_ mysqld --defaults-file=/home/wl/software/sysconfdir/my.cnf
+wl       22751  0.0  0.0 151104  1836 pts/1    R+   16:45   0:00  \_ ps xuf
+[wl@host122 log]$
+
+6. 查看堆栈
+见文件 《mysql 5.7.26 启动堆栈信息》
+
+7. 更改密码
+登陆
+mysql -u root -p 
+输入密码
+
+更新密码
+ ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'admin';
+
+8. undo log
+innodb_undo_tablespaces是控制undo是否开启独立的表空间的参数
+为0表示：undo使用系统表空间，即ibdata1
+不为0表示：使用独立的表空间，一般名称为 undo001 undo002，存放地址的配置项为：innodb_undo_directory
+一般innodb_undo_tablespaces 默认配置为0，innodb_undo_directory默认配置为当前数据目录
+--
+MySQL5.6中开始支持把undo log分离到独立的表空间，并放到单独的文件目录下；采用独立undo表空间，再也不用担心undo会把 ibdata1 文件搞大；
+也给我们部署不同IO类型的文件位置带来便利，对于并发写入型负载，我们可以把undo文件部署到单独的高速存储设备上. 
+
+在数据库初始化的时候就使用如下三个参数
+innodb_undo_tablespaces=3 #设置为3个
+innodb_undo_logs=128 #默认128个
+innodb_undo_directory =/dbfiles/mysql_home/undologs
+--
+ undo位置:默认ibdata1中,支持独立表空间
+ 参数
+  innodb_max_undo_log_size=1073741824
+  innodb_undo_directory=./ 独立undo表空间路径 
+  innodb_undo_log_truncate=OFF 支持truncate回收表空间,默认关闭
+  innodb_undo_logs=128 128个回滚段
+  innodb_undo_tablespaces=0 独立表空间,默认为0,需要设置>=2
+  innodb_purge_rseg_truncate_frequency=128 purge undo轮询128次后，进行一次undo的truncate
