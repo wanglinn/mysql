@@ -31,8 +31,7 @@ mkdir build5726
 [wl@host122 build5726]$ cat auto.sh 
 cmake ../mysql-5.7.26 -DCMAKE_INSTALL_PREFIX=/home/wl/install/install5726 \
 -DMYSQL_DATADIR=/home/wl/mysqlcluster/app5726/data \
--DDOWNLOAD_BOOST=1 \
--DWITH_BOOST=/home/wl/mysqlcluster/app5726/boost1590 \
+-DWITH_BOOST=/home/wl/software/mysql-5.7.26/boost/boost_1_59_0 \
 -DSYSCONFDIR=/home/wl/software/sysconfdir \
 -DWITH_INNOBASE_STORAGE_ENGINE=1 \
 -DWITH_PARTITION_STORAGE_ENGINE=1 \
@@ -45,10 +44,16 @@ cmake ../mysql-5.7.26 -DCMAKE_INSTALL_PREFIX=/home/wl/install/install5726 \
 -DDEFAULT_COLLATION=utf8mb4_general_ci \
 -DWITH_EMBEDDED_SERVER=off
 
-make
+make -j6
 make install
 
-
+--
+从MySQL 5.7.5开始Boost库是必需的 
+下载 mysql-boost-5.7.12.tar.g 在 cmake 指定参数 
+-DWITH_BOOST=boost/boost_1_59_0/ 
+或直接cmake指定参数 
+-DDOWNLOAD_BOOST=1 -DWITH_BOOST 
+系统会下载 boost
 
 3. my.cnf 文件
 位置 SYSCONFDIR=/home/wl/software/sysconfdir
