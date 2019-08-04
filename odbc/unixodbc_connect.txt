@@ -1,0 +1,181 @@
+
+1. 源码文件
+2. 编译及配置 unixodbc
+2.1 编译
+2.2 配置
+2.3 测试
+3. 安装mysql odbc
+4. 测试程序
+5. 参考
+
+1. 源码文件
+mysql-connector-odbc-5.3.13-linux-glibc2.12-x86-64bit.tar.gz (使用的)
+mysql-connector-odbc-5.3.13-src.tar.gz (源代码)
+将mysql-connector-odbc-5.3.13-linux-glibc2.12-x86-64bit.tar.gz 解压，对应文件夹 /home/wl/software/mysqlodbc5313
+https://dev.mysql.com/downloads/connector/odbc/
+
+unixODBC-2.3.7.tar.gz
+http://www.unixodbc.org/
+
+MyODBC体系结构建立在5个组件上，如下图所示：
+
+Driver Manager:
+负责管理应用程序和驱动程序间的通信, 主要功能包括: 解析DSN (数据源名称,ODBC的数据源名称在ODBC.INI文件中配置), 加载和卸载驱动程序,处理ODBC调用,将其传递给驱动程序.
+Connector/ODBC(MyODBC驱动程序):
+实现ODBC API所提供的功能, 它负责处理ODBC函数调用,将SQL请求提交给MySQL服务器，并将结果返回给应用程序.
+ODBC.INI
+ODBC.INI是ODBC配置文件，记录了连接到服务器所需的驱动信息和数据库信息。Driver Manager将使用它来确定加载哪个驱动程序（使用数据源名DSN）。驱动程序将根据指定的DSN来读取连接参数。
+
+2. 编译及配置 unixodbc
+2.1 编译
+/home/wl/software/build/unixodbc
+[wl@host122 unixodbc]$ cat run.sh 
+../../unixODBC-2.3.7/configure --prefix=/home/wl/install/unixodbc --includedir=/home/wl/install/unixodbc/include --libdir=/home/wl/install/unixodbc/lib -bindir=/home/wl/install/unixodbc/bin --sysconfdir=/home/wl/install/unixodbc/etc  -bindir=/home/wl/install/unixodbc/bin
+make
+make install
+
+2.2 配置
+[wl@host122 etc]$ cat odbc.ini 
+[MySQL-test]
+Description = MySQL test database
+Trace       = Off
+TraceFile   = stderr
+Driver      = MySQL
+SERVER      = 127.0.0.1
+USER        = root
+PASSWORD    = admin
+PORT        = 3306
+DATABASE    = db1
+
+[wl@host122 etc]$ cat odbcinst.ini 
+[MYSQL]
+Driver = /home/wl/software/mysqlodbc5313/lib/libmyodbc5w.so
+SETUP = /home/wl/software/mysqlodbc5313/lib/libmyodbc5w.so
+UsageCount = 1
+
+（odbc 5.3及以上是libmyodbc5a.so和libmyodbc5w.so。其中c5a是Ansi版，c5w是Unicode版）
+
+2.3 测试
+将unixodbc相关信息添加到环境变量中
+[wl@host122 etc]$ which odbcinst
+~/install/unixodbc/bin/odbcinst
+[wl@host122 etc]$ odbcinst -j
+unixODBC 2.3.7
+DRIVERS............: /home/wl/install/unixodbc/etc/odbcinst.ini
+SYSTEM DATA SOURCES: /home/wl/install/unixodbc/etc/odbc.ini
+FILE DATA SOURCES..: /home/wl/install/unixodbc/etc/ODBCDataSources
+USER DATA SOURCES..: /home/wl/.odbc.ini
+SQLULEN Size.......: 8
+SQLLEN Size........: 8
+SQLSETPOSIROW Size.: 8
+
+[wl@host122 etc]$ isql mysql-test
++---------------------------------------+
+| Connected!                            |
+|                                       |
+| sql-statement                         |
+| help [tablename]                      |
+| quit                                  |
+|                                       |
++---------------------------------------+
+
+3. 安装mysql odbc
+cd /home/wl/software/mysqlodbc5313/bin
+./myodbc-installer -d -a -n "MYSQL" -t "DRIVER=/home/wl/software/mysqlodbc5313/lib/libmyodbc5w.so;SETUP=/home/wl/software/mysqlodbc5313/lib/libmyodbc5w.so"
+
+4. 测试程序
+[wl@host122 odbc]$ cat test1.c 
+
+#include<stdio.h>
+#include <assert.h>
+#include<sql.h>
+#include <sqlext.h>
+
+int main()
+{
+    SQLHENV serverhenv;
+    SQLHDBC serverhdbc;
+    SQLHSTMT serverhstmt;
+    SQLRETURN ret;
+        SQLINTEGER col1, col2;
+    SQLLEN length;
+ 
+    //分配环境句柄
+    ret = SQLAllocHandle(SQL_HANDLE_ENV,SQL_NULL_HANDLE,&serverhenv);
+    if(!SQL_SUCCEEDED(ret))
+    {
+        fprintf(stderr, "SQLAllocHandle error!\n");
+        return 1;
+    }
+
+    //设置环境属性
+    ret = SQLSetEnvAttr(serverhenv,SQL_ATTR_ODBC_VERSION,(void*)SQL_OV_ODBC3,0);
+    if(!SQL_SUCCEEDED(ret))
+    {
+        fprintf(stderr, "SQLSetEnvAttr error!\n");
+        return 1;
+    }
+ 
+    //分配连接句柄
+    ret = SQLAllocHandle(SQL_HANDLE_DBC,serverhenv,&serverhdbc);
+    if(!SQL_SUCCEEDED(ret))
+    {
+        fprintf(stderr, "SQLSetEnvAttr error!\n");
+        return 1;
+    }
+ 
+    //数据库连接
+    ret = SQLConnect(serverhdbc,(SQLCHAR*)"mysql-test",SQL_NTS,(SQLCHAR*)"root",SQL_NTS,(SQLCHAR*)"admin",SQL_NTS);
+    if(!SQL_SUCCEEDED(ret))
+    {
+        fprintf(stderr, "SQL_Connect error!\n");
+        return 1;
+    }
+ 
+    //分配执行语句句柄
+    ret = SQLAllocHandle(SQL_HANDLE_STMT,serverhdbc,&serverhstmt);
+ 
+    //执行SQL语句
+    ret=SQLExecDirect(serverhstmt,(SQLCHAR*)"select * from test1",SQL_NTS);
+    if(ret == SQL_SUCCESS || ret == SQL_SUCCESS_WITH_INFO){
+        //绑定数据
+        SQLBindCol(serverhstmt,1, SQL_C_LONG, &col1, sizeof(col1), &length);
+        SQLBindCol(serverhstmt,2, SQL_C_LONG, &col2, sizeof(col1), &length);
+        while(SQL_NO_DATA != SQLFetch(serverhstmt))
+        {
+            fprintf(stdout, "result: %d, %d\n", col1, col2);
+        }
+    }
+ 
+    //释放语句句柄
+    ret=SQLFreeHandle(SQL_HANDLE_STMT,serverhstmt);
+    if(SQL_SUCCESS!=ret && SQL_SUCCESS_WITH_INFO != ret)
+        fprintf(stderr, "free hstmt error!\n");
+ 
+    //断开数据库连接
+    ret=SQLDisconnect(serverhdbc);
+    if(SQL_SUCCESS!=ret&&SQL_SUCCESS_WITH_INFO!=ret)
+        fprintf(stderr, "disconnected error!\n");
+ 
+    //释放连接句柄
+    ret=SQLFreeHandle(SQL_HANDLE_DBC,serverhdbc);
+    if(SQL_SUCCESS!=ret&&SQL_SUCCESS_WITH_INFO!=ret)
+         fprintf(stderr, "free hdbc error!\n");
+ 
+    //释放环境句柄句柄
+    ret=SQLFreeHandle(SQL_HANDLE_ENV,serverhenv);
+    if(SQL_SUCCESS!=ret&&SQL_SUCCESS_WITH_INFO!=ret)
+        fprintf(stderr, "free henv error!\n");
+}
+
+编译：
+gcc -g -o test1 test1.c -L ~/install/unixodbc/lib/ -lodbc -I ~/install/unixodbc/include/
+
+5. 参考
+https://blog.csdn.net/sunny_ss12/article/details/53170716
+
+https://blog.csdn.net/u010587433/article/details/46799037
+
+https://docs.microsoft.com/en-us/sql/odbc/reference/syntax/sqlbindcol-function?view=sql-server-2017
+
+
