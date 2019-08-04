@@ -178,4 +178,4 @@ https://blog.csdn.net/u010587433/article/details/46799037
 
 https://docs.microsoft.com/en-us/sql/odbc/reference/syntax/sqlbindcol-function?view=sql-server-2017
 
-
+https://www.csdn.net/gather_29/Mtzagg1sMzktYmxvZwO0O0OO0O0O.html
