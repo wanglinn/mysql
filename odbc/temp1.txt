@@ -114,7 +114,27 @@ int main(){
  /** 连接数据源 **/
  //  sret =  SQLConnect(hdbc,(SQLCHAR*)szConnectStr,256,NULL,256,NULL,256);
    sret = SQLDriverConnect(hdbc,NULL,(SQLCHAR*)szConnectString,SQL_NTS, (SQLCHAR *)szDriverOutput,256,&sDriverOutputLength,SQL_DRIVER_NOPROMPT);
-  if(!isSuc(sret))printf("连接数据源出错\n");
+
+  if(!isSuc(sret))
+  {
+
+    printf("连接数据源出错:%d\n", sret);
+    SQLCHAR      SQLState[256];
+    SQLINTEGER     NativeErr = 0;
+    SQLCHAR      ErrMsg[255];
+    SQLSMALLINT  ErrMsgLen = 0;
+
+   SQLGetDiagRec( SQL_HANDLE_DBC, 
+                                              hdbc, 
+                                              1,
+                                              SQLState, 
+                                              &NativeErr, 
+                                              ErrMsg, 
+                                              sizeof(ErrMsg),
+                                              &ErrMsgLen  );
+                  printf("SQLSTATE : %s\n%s\n", SQLState, ErrMsg);
+  return 0;
+  }
  /** 分配语句句柄 **/
  sret = SQLAllocHandle(SQL_HANDLE_STMT,hdbc,&hsmt);
  if(!isSuc(sret))printf("分配语句句柄出错\n");
