@@ -1,0 +1,167 @@
+MySQLDriverConnect
+
+
+myodbc-installer -d -a -n "MYSQL" -t "DRIVER=/home/wl/software/mysqlodbc5313/lib/libmyodbc5a.so;SETUP=/home/wl/software/mysqlodbc5313/lib/libmyodbc5a.so"
+
+
+gcc -g -o test2 test2.c  -I ~/install/unixodbc/include -L ~/install/unixodbc/lib -lodbc
+
+
+// the attributes may be in the connection string 
+DriverManager/SQLDriverConnect.c:1320
+__handle_attr_extensions_cs( connection, &con_struct ); 
+
+
+
+DriverManager/SQLDriverConnect.c:1376
+ret_from_connect = SQLDRIVERCONNECT( connection, 
+
+
+MySQLDriverConnect
+mysql-connector-odbc-5.3.13-src/driver/connect.cc:649
+
+----
+mysql-connector-odbc-5.3.13-src/driver/connect.cc:681
+(gdb) p *ds
+$34 = {name = 0x0, driver = 0x615c80, description = 0x0, server = 0x617560, uid = 0x6175d0, pwd = 0x617610, database = 0x6175a0, socket = 0x0, 
+  initstmt = 0x0, charset = 0x0, sslkey = 0x0, sslcert = 0x0, sslca = 0x0, sslcapath = 0x0, sslcipher = 0x0, sslmode = 0x0, rsakey = 0x0, 
+  savefile = 0x0, plugin_dir = 0x0, default_auth = 0x0, port = 3306, readtimeout = 0, writetimeout = 0, clientinteractive = 0, name8 = 0x0, 
+  driver8 = 0x0, description8 = 0x0, server8 = 0x0, uid8 = 0x0, pwd8 = 0x0, database8 = 0x0, socket8 = 0x0, initstmt8 = 0x0, charset8 = 0x0, 
+  sslkey8 = 0x0, sslcert8 = 0x0, sslca8 = 0x0, sslcapath8 = 0x0, sslcipher8 = 0x0, sslmode8 = 0x0, rsakey8 = 0x0, savefile8 = 0x0, 
+  plugin_dir8 = 0x0, default_auth8 = 0x0, return_matching_rows = 1, allow_big_results = 0, use_compressed_protocol = 0, 
+  change_bigint_columns_to_int = 0, safe = 0, auto_reconnect = 0, auto_increment_null_search = 0, handle_binary_as_char = 0, 
+  can_handle_exp_pwd = 0, enable_cleartext_plugin = 0, get_server_public_key = 0, dont_prompt_upon_connect = 0, dynamic_cursor = 0, 
+  ignore_N_in_name_table = 0, user_manager_cursor = 0, dont_use_set_locale = 0, pad_char_to_full_length = 0, dont_cache_result = 0, 
+  return_table_names_for_SqlDescribeCol = 0, ignore_space_after_function_names = 0, force_use_of_named_pipes = 0, no_catalog = 0, 
+  read_options_from_mycnf = 0, disable_transactions = 0, force_use_of_forward_only_cursors = 0, allow_multiple_statements = 0, 
+  limit_column_size = 0, min_date_to_zero = 0, zero_date_to_min = 0, default_bigint_bind_str = 0, save_queries = 0, no_information_schema = 0, 
+  sslverify = 0, cursor_prefetch_number = 0, no_ssps = 0, disable_ssl_default = 0, ssl_enforce = 0, no_tls_1 = 0, no_tls_1_1 = 0, no_tls_1_2 = 0, 
+  no_date_overflow = 0, enable_local_infile = 0}
+  
+ (gdb) bt
+#0  MySQLDriverConnect (hdbc=0x615f80, hwnd=0x0, szConnStrIn=0x617490, cbConnStrIn=79, szConnStrOut=0x6169b0, cbConnStrOutMax=256, 
+    pcbConnStrOut=0x6028e0 <sDriverOutputLength>, fDriverCompletion=0)
+    at /export/home/pb2/build/sb_0-33672206-1555347955.04/mysql-connector-odbc-5.3.13-src/driver/connect.cc:681
+#1  0x00007ffff6d69178 in SQLDriverConnect (hdbc=0x615f80, hwnd=0x0, in=<optimized out>, in_len=79, out=0x6026e0 <szDriverOutput> "", out_max=256, 
+    out_len=0x6028e0 <sDriverOutputLength>, completion=0)
+    at /export/home/pb2/build/sb_0-33672206-1555347955.04/mysql-connector-odbc-5.3.13-src/driver/ansi.cc:277
+#2  0x00007ffff7b7cd21 in SQLDriverConnect (hdbc=0x6037f0, hwnd=0x0, 
+    conn_str_in=0x6020c0 <szConnectString> "DRIVER={MySQL};SERVER=127.0.0.1;DATABASE=db2;USER=root;PASSWORD=admin;OPTION=3;", len_conn_str_in=-3, 
+    conn_str_out=<optimized out>, conn_str_out_max=256, ptr_conn_str_out=0x6028e0 <sDriverOutputLength>, driver_completion=0)
+    at ../../../unixODBC-2.3.7/DriverManager/SQLDriverConnect.c:1376
+#3  0x0000000000400a09 in main () at test2.c:62
+
+---
+#include<sql.h>
+#include<sqlext.h> 
+#include<string.h>
+#include <stdio.h>
+
+
+//struct tagTIME_STRUCT { SQLUSMALLINT hour; SQLUSMALLINT minute; SQLUSMALLINT second; } TIME_STRUCT  
+
+/** 简单的宏,用于判断ODBCAPI的执行结果是否正确 **/
+#define isSuc(result) ((result) == SQL_SUCCESS || (result) == SQL_SUCCESS_WITH_INFO)
+
+/** 可扩展设置 **/
+char szConnectString[256] ="Driver={Mysql};Database=db2;Server=127.0.0.1;uid=root;pwd=admin;";
+#if 0
+char szConnectString[256] = "DRIVER={MySQL};"
+                   "SERVER=127.0.0.1;"
+                   "DATABASE=db2;"
+                   "USER=root;"
+                   "PASSWORD=admin;"
+                   "OPTION=3;"
+                        ;
+#endif
+//"driver={Microsoft Access Driver (*.mdb)};DBQ=E:\\ODBC.MDB
+char szSQL[256] = "select  * from version";
+/** 输出缓存 **/
+ char szDriverOutput[256];
+ char szConnectStr[256]="mysql-test";
+ char szUserName[256]="root";
+ char szPassWord[256]="admin";
+short sDriverOutputLength;
+/** 用于测试的变量 **/
+int a = 0;
+char b[255];
+char c[255];
+long temp = 0;
+
+/** 用于测试的函数 **/
+int main(){
+ short sret; //返回代码
+ void* henv;  //环境句柄
+ void* hdbc;  //连接句柄
+ long mode;//提交模式
+ void* hsmt; //语句句柄
+ TIMESTAMP_STRUCT curTime;
+ /** 申请环境句柄 **/
+ sret = SQLAllocHandle(SQL_HANDLE_ENV,SQL_NULL_HANDLE,&henv);
+ if(!isSuc(sret))printf("申请环境句柄出错\n");
+ /** 设置环境属性,声明ODBC版本 **/
+ sret = SQLSetEnvAttr(henv,SQL_ATTR_ODBC_VERSION,(void*)SQL_OV_ODBC3,SQL_IS_INTEGER);
+ if(!isSuc(sret))printf("声明ODBC版本出错\n");
+ /** 申请连接句柄 **/
+ sret = SQLAllocHandle(SQL_HANDLE_DBC,henv,&hdbc);
+ if(!isSuc(sret))printf("申请连接句柄出错\n");
+ /** 设置连接属性 **/
+ //sret = SQLSetConnectAttr(hdbc,SQL_ATTR_AUTOCOMMIT,(void*)SQL_AUTOCOMMIT_OFF,SQL_IS_INTEGER);
+ //if(!isSuc(sret))printf("设置连接属性出错\n");
+ /** 取得连接属性 **/
+ //sret = SQLGetConnectAttr(hdbc,SQL_ATTR_AUTOCOMMIT,(void*)&mode,sizeof(mode) + 1,NULL);
+ //if(!isSuc(sret))printf("取得连接属性出错\n");
+ /** 连接数据源 **/
+ //  sret =  SQLConnect(hdbc,(SQLCHAR*)szConnectStr,256,NULL,256,NULL,256);
+   sret = SQLDriverConnect(hdbc,NULL,(SQLCHAR*)szConnectString,SQL_NTS, (SQLCHAR *)szDriverOutput,256,&sDriverOutputLength,SQL_DRIVER_NOPROMPT);
+  if(!isSuc(sret))printf("连接数据源出错\n");
+ /** 分配语句句柄 **/
+ sret = SQLAllocHandle(SQL_HANDLE_STMT,hdbc,&hsmt);
+ if(!isSuc(sret))printf("分配语句句柄出错\n");
+ /** 执行语句 **/
+ sret = SQLExecDirect(hsmt,(SQLCHAR *)szSQL,256);
+ if(!isSuc(sret))printf("执行语句出错\n");
+ /** 绑定结果集和获得数据 **/
+ /**
+ 小提示，这里应该可以先取得字段列表然后用循环做成自动邦定的。 
+ **/
+ char szVersion[255];
+ SQLBindCol(hsmt,1,SQL_C_CHAR,szVersion,256,&temp);//测试时
+ SQLBindCol(hsmt,2, SQL_C_TIMESTAMP,&curTime,sizeof(TIMESTAMP_STRUCT),&temp);//测试时
+ 
+ //SQLBindCol(hsmt,2,SQL_C_CHAR,&b,sizeof(b),&temp);//测试时
+  /** 取得数据 **/
+ while(1){
+  //一般方式
+  sret = SQLFetch(hsmt);
+  /** 滚动 **/
+  //sret = SQLFetchScroll(hsmt,SQL_FETCH_NEXT,0);
+  /**
+  前面如果发生错误,这里很可能得不到SQL_NO_DATA_FOUND而发生死循环，
+  所以我不用而用SQL_SUCCESS来判断，但这句在杂复的程序中里依然有用。 
+  **/
+  //if (sret == SQL_NO_DATA_FOUND) break; //如果没有数据就打断。
+  if (sret != SQL_SUCCESS) break;
+  printf("a = %s\t",szVersion);//测试时
+   printf("retTemp=%d\n",temp);
+  printf("curTime =%d-%d-%d %d:%d:%d \t",curTime.year ,curTime.month,curTime.day,
+    curTime.hour,curTime.minute,curTime.second);//测试时
+  //printf("b = %s\r\n",b);//测试时
+  //printf("c = %s\r\n",c);//测试时   
+    printf("retTemp=%d\n",temp);
+
+ }
+ /** 释放语句句柄 **/
+ SQLFreeHandle(SQL_HANDLE_STMT,hsmt);
+ /** 提交连接的事务 **/
+ SQLEndTran(SQL_HANDLE_DBC,hdbc,SQL_COMMIT);
+ /** 断开与数据源的连接 **/
+ SQLDisconnect(hdbc);
+ /** 释放连接句柄 **/
+ SQLFreeHandle(SQL_HANDLE_DBC,hdbc);
+ /** 释放环境句柄 **/
+ SQLFreeHandle(SQL_HANDLE_ENV,henv);
+ /////////无关语句，仅仅是让程序停下来，看结果。 
+ getchar();//测试时
+}
+
