@@ -1,8 +1,4 @@
-抓包 tcpdump port 3306 -e -A -q -vv -nn
-
-
-
-
+抓包 tcpdump port 3306 -e -A -q -vv -nn  
 
 
 
