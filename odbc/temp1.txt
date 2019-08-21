@@ -1,5 +1,45 @@
 https://social.msdn.microsoft.com/Forums/sqlserver/en-US/a5e8b15e-c47e-479e-8bde-d6e493eea977/how-to-insert-a-null-in-a-sqltypetimestamp-column-?forum=sqldataaccess
 
+
+
+表值参数描述符字段
+https://docs.microsoft.com/zh-cn/previous-versions/sql/sql-server-2008/bb510475%28v%3dsql.100%29
+
+表值参数和列值的绑定及数据传输
+https://docs.microsoft.com/zh-cn/previous-versions/sql/sql-server-2008/bb510392%28v%3dsql.100%29
+
+将 SQL_SOPT_SS_PARAM_FOCUS 设置为 0 可还原 SQLBindParameter、SQLSetDescRec 和 SQLSetDescField 
+在对常规顶级参数进行操作时的常见效果。
+
+
+ODBC 介绍
+https://max.book118.com/html/2016/0815/51547209.shtm
+
+
+
+
+../../unixODBC-2.3.7/configure --prefix=/home/wl/install/unixodbc --includedir=/home/wl/install/unixodbc/include --libdir=/home/wl/install/unixodbc/lib -bindir=/home/wl/install/unixodbc/bin --sysconfdir=/home/wl/install/unixodbc/etc  -bindir=/home/wl/install/unixodbc/bin
+
+ret=SQLRowCount(hstmt,&number_row);//查询被影响的行数
+
+(gdb) bt
+#0  0x00007f220d42ed61 in desc_find_dae_rec (desc=0x1041300)
+    at /export/home/pb2/build/sb_0-33672206-1555347955.04/mysql-connector-odbc-5.3.13-src/driver/desc.cc:350
+#1  0x00007f220d4326b1 in my_SQLExecute (pStmt=0x10370f0)
+    at /export/home/pb2/build/sb_0-33672206-1555347955.04/mysql-connector-odbc-5.3.13-src/driver/execute.cc:1466
+#2  0x00007f220d444f90 in SQLExecDirectW (hstmt=0x10370f0, str=<optimized out>, str_len=<optimized out>)
+    at /export/home/pb2/build/sb_0-33672206-1555347955.04/mysql-connector-odbc-5.3.13-src/driver/unicode.cc:366
+#3  0x00007f220e476d3e in SQLExecDirect (statement_handle=0x1036a60, statement_text=0x400f7b "insert into test1 values(?,1)", text_length=29)
+    at ../../../unixODBC-2.3.7/DriverManager/SQLExecDirect.c:384
+#4  0x0000000000400c9c in main () at test1.c:64
+
+
+https://blog.csdn.net/tao546377318/article/details/53409302
+
+
+
+
+
 MySQLDriverConnect
 
 
