@@ -1,3 +1,5 @@
+https://social.msdn.microsoft.com/Forums/sqlserver/en-US/a5e8b15e-c47e-479e-8bde-d6e493eea977/how-to-insert-a-null-in-a-sqltypetimestamp-column-?forum=sqldataaccess
+
 MySQLDriverConnect
 
 
