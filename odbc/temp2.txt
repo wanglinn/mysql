@@ -1,0 +1,20 @@
+https://www.enterprisedb.com/docs/cn/8.3/oracompat/EnterpriseDB_OraCompat_8.3_CN-53.htm
+
+
+https://docs.oracle.com/cd/B28359_01/appdev.111/b28395/oci16rel002.htm#LNOCI87702
+
+
+OCI 例子
+http://www.cis.famu.edu/support/10g/Oracle_Database_10g/doc/server.102/b14257/ap_oci.htm
+
+
+http://pages.di.unipi.it/ghelli/didattica/bdldoc/B19306_01/appdev.102/b14250/oci02bas.htm
+
+
+https://code.woboq.org/qt5/qtbase/src/plugins/sqldrivers/oci/qsql_oci.cpp.html
+
+
+http://rsdn.org/forum/db/2394056.1
+
+http://www.asktheway.org/official-documents/timesten/E21901_01/timesten.1122/e21637/oci.htm#TTCDV203
+
