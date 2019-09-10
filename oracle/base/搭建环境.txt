@@ -1,0 +1,30 @@
+主要参考来自：
+https://www.cnblogs.com/it1992/p/9468124.html
+
+首先根据文章内容将各个库都安装上，路径权限都配置上。
+在静默安装 runInstaller -silent ...可以加上 -ignorePrereq 避免有的库版本不匹配或不存在报错中断。
+
+安装成功后会提示：
+[oracle@host122 database]$ 
+The following configuration scripts need to be executed as the "root" user. 
+ #!/bin/sh 
+ #Root scripts to run
+
+/data/oraInventory/orainstRoot.sh
+/data/oracle/app/product/11.2.0/db_1/root.sh
+To execute the configuration scripts:
+         1. Open a terminal window 
+         2. Log in as "root" 
+         3. Run the scripts 
+         4. Return to this window and hit "Enter" key to continue 
+
+Successfully Setup Software.
+
+若没有生成orainstRoot.sh这个文件，解决办法：删除/etc/oraInst.loc文件
+
+到此oracle 架子算是搭建完了，还需要实例化库，执行操作：
+编译文件  etc/dbca.rsp
+执行命令 dbca -silent -responseFile etc/dbca.rsp
+
+至此，oracle数据库搭建完成。
+
