@@ -1,0 +1,257 @@
+mfc 插入oracle blob、clob字段
+分类： MFC ORACLE2013-08-31 15:17 226人阅读 评论(0) 收藏 举报
+cc++VC++mfcoracle
+参考网址：http://sourceforge.net/p/orclib/discussion/470800/thread/5a2f05f1
+当我看到这篇文字的时候想死的心都有了，所以写下来作为以后的教训，而且是深刻的教训呀。
+方法一：
+OCI_Statement* stmt = OCI_StatementCreate(conn);
+OCI_Lob * clob = OCI_LobCreate(conn, OCI_CLOB);
+OCI_Prepare(stmt, "UPDATE tbl_clob SET clob = :clob WHERE id = :id");
+OCI_BindLob(stmt, ":clob", clob);
+OCI_BindInt(stmt, ":id", &id);
+OCI_LobWrite(clob, const_cast(data.c_str()), data.length());
+OCI_Execute(stmt);
+ 
+方法二：
+#include "ocilib.h"
+
+#define SIZE_BUF 512
+
+int main(void)
+{
+    OCI_Connection *cn;
+    OCI_Statement *st;
+    OCI_Resultset *rs;
+    OCI_Lob *lob1, *lob2;
+
+    char temp[SIZE_BUF+1];
+    int code, n;
+
+    if (!OCI_Initialize(NULL, NULL, OCI_ENV_DEFAULT))
+        return EXIT_FAILURE;
+
+    cn = OCI_ConnectionCreate("db", "usr", "pwd", OCI_SESSION_DEFAULT);
+    st = OCI_StatementCreate(cn);
+ 
+    OCI_ExecuteStmt(st, "select code, content from test_lob for update");
+
+    rs = OCI_GetResultset(st);
+    
+    while (OCI_FetchNext(rs))
+    {
+        code = OCI_GetInt(rs, 1);
+        lob1 = OCI_GetLob(rs, 2);
+        lob2 = OCI_LobCreate(cn, OCI_CLOB);
+
+        n = OCI_LobWrite(lob1, "Today, ", 7);
+        OCI_LobSeek(lob1, n, OCI_SEEK_SET);
+       
+        n = OCI_LobWrite(lob2, "I'm going to the cinema !", 25);
+       
+        OCI_LobAppendLob(lob1, lob2);
+        OCI_LobSeek(lob1, 0, OCI_SEEK_SET);
+        
+        n = OCI_LobRead(lob1, temp, SIZE_BUF);
+        temp[n] = 0;
+
+        printf("code: %i, action : %s\n", code, temp);
+            
+        OCI_LobFree(lob2);
+    }
+
+    printf("\n%d row(s) fetched\n", OCI_GetRowCount(rs));
+
+    OCI_Cleanup();
+
+    return EXIT_SUCCESS;
+}
+
+
+
+
+
+
+Hi,
+I am currently switching an application from using Pro*c to using OCILIB.
+Everything works fine, except updating clobs.
+When trying to update a clob, I always get an access violation in
+oracommon9.dll trying to read address 0x45.
+An example:
+... // Initializing connection
+OCI_Statement* stmt = OCI_StatementCreate(conn);
+OCI_Prepare(stmt, "UPDATE tbl_clob SET clob = :clob WHERE id = :id");
+OCI_SetBindAllocation(stmt, OCI_BAM_INTERNAL);
+OCI_BindArrayOfLobs(stmt, ":clob", NULL, OCI_CLOB, 0);
+
+string data; // Contains approx. 4 million chars
+size_t charCount = data.length();
+size_t byteCount = 0;
+OCI_LobWrite2(static_cast<OCI_Lob*>(OCI_BindGetData(OCI_GetBind2(stmt, ":clob"))), const_cast<char*>(data.c_str()), &charCount, &byteCount);
+
+... // Bind :id
+
+OCI_Execute(stmt);    // Access Violation during this call
+I am using OCILIB 3.9.2 on Oracle 9.2.0.8.
+What am I doing wrong?
+Regards,
+Dries
+ 
+Reply
+Link
+Attach
+o
+ 
+Anonymous 
+2011-09-26
+Hi,
+I searched the internet and found someone having a similar problem using plain
+OCI: https://forums.oracle.com/forums/thread.jspa?threadID=194246 and I read
+Either a single locator or an array of locators can be bound in a single
+bind call. In each case, the application must pass the address of a LOB
+locator and not the locator itself
+in the OCI documentationhttp://download.oracle.com/docs/cd/B13789_01/appdev.
+101/b10779/oci05bnd.htm#432118.
+So, after some debugging I changed:
+            case OCI_CDT_LOB:
+            {
+                OCI_Lob *lob = OCI_LobCreate(bnd->stmt->con, bnd->subtype);
+
+                if (lob != NULL)
+                {
+                    bnd->input    = (void **) lob;
+                    bnd->buf.data = (void **) lob->handle;
+                }
+
+                break;
+            }
+into
+            case OCI_CDT_LOB:
+            {
+                OCI_Lob *lob = OCI_LobCreate(bnd->stmt->con, bnd->subtype);
+
+                if (lob != NULL)
+                {
+                    bnd->input    = (void **) lob;
+                    bnd->buf.data = (void **) [b]&[/b]lob->handle;
+                }
+
+                break;
+            }
+This fixes the access violation and the data send to database looks ok.
+Might this be a bug?
+Regards,
+Dries
+ 
+Reply
+Link
+Attach
+o
+ 
+Vincent Rogier 
+2011-09-26
+Did you set OCI_bindArraySetSize() ??
+ 
+Reply
+Link
+Attach
+o
+ 
+Anonymous 
+2011-09-26
+No, I didn't.
+If I do, it is working fine. But now another branch is executed in
+OCI_BindAllocData and the code, that I changed before, is not executed.
+OCI_BindArraySetSize(stmt, 1);
+...
+OCI_LobWrite2(static_cast<OCI_Lob**>(OCI_BindGetData(OCI_GetBind2(stmt, ":clob")))[0], const_cast<char*>(data.c_str()), &charCount, &byteCount);
+ 
+Reply
+Link
+Attach
+o
+ 
+Vincent Rogier 
+2011-09-26
+are you binding an array of lob or just a single lob ?
+If you're passing an array, you must use the array interface correctly and use
+OCI_BindArraySetSize()
+ 
+Reply
+Link
+Attach
+o
+ 
+Anonymous 
+2011-09-26
+I am just binding a single lob.
+I (mis)used OCI_BindArrayOfLobs as I could not get OCI_BindLob to do an
+internal allocation.
+When I do use OCI_BindLob with a given lob, does the statement clean up the
+lob or should I call OCI_LobFree?
+ 
+Reply
+Link
+Attach
+o
+ 
+Vincent Rogier 
+2011-09-26
+... // Initializing connection
+string data;
+int id;
+... // Initializing DATA AND ID
+OCI_Statement* stmt = OCI_StatementCreate(conn);
+OCI_Lob * clob = OCI_LobCreate(conn, OCI_CLOB);
+OCI_Prepare(stmt, "UPDATE tbl_clob SET clob = :clob WHERE id = :id");
+OCI_BindLob(stmt, ":clob", clob);
+OCI_BindInt(stmt, ":id", &id);
+OCI_LobWrite(clob, const_cast<char*>(data.c_str()), data.length());
+OCI_Execute(stmt);
+ 
+Reply
+Link
+Attach
+o
+ 
+Anonymous 
+2011-09-26
+The database layer am I migrating over from Pro*C is lot more dynamic than the
+simple example I gave to demonstrate the problem. Adding the fact
+OCI_BAM_INTERNAL and OCI_BindLob can not work together (gives an ORA-24813; it
+looks like the OCILobLocator is never assigned to buf.data of the OCI_Bind), I
+will use the array interface as you proposed.
+Thanks for your help.
+As I want use OCI_BAM_INTERNAL f
+As I am using OCI_BAM_INTERNAL for the whole
+ 
+Reply
+Link
+Attach
+o
+ 
+Vincent Rogier 
+2011-09-26
+OCI_BAM_INTERNAL and OCI_BindLob() should work together.
+Do you still have an error if you replace, in the original code you've posted
+the call to OCI_BindArrayOfLobs() by OCI_BindLob() ?
+ 
+Reply
+Link
+Attach
+o
+ 
+Anonymous 
+2011-09-26
+Replacing it by OCI_BindLob crashes because when called with data == NULL, the
+type to use, expected in data->type, is not valid.
+ 
+Reply
+Link
+Attach
+o
+ 
+Vincent Rogier 
+2011-09-26
+in fact, OCI_SetBindAllocation() only work for array interface because for
+object like lobs, there is no way internally to find out the type of lob to
+create (clob or lob)....
