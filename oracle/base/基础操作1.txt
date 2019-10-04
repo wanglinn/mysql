@@ -1,0 +1,19 @@
+创建用户并授权
+ create user test identified by test;
+
+输入命令show parameter name便可以查看当前登录数据库的参数配置
+
+SQL> show parameter name;
+
+NAME                                 TYPE        VALUE
+------------------------------------ ----------- ------------------------------
+db_file_name_convert                 string
+db_name                              string      dbsrv2
+db_unique_name                       string      dbsrv2
+global_names                         boolean     FALSE
+instance_name                        string      dbsrv2
+lock_name_space                      string
+log_file_name_convert                string
+service_names                        string      dbsrv2
+
+
