@@ -28,3 +28,11 @@ Successfully Setup Software.
 
 至此，oracle数据库搭建完成。
 
+启动数据库：
+启动监听：lsnrctl start
+查看监听状态： lsnrctl status
+登陆数据库 ： sqlplus / as sysdba
+然后执行 startup
+
+停止数据库：shutdown
+停止监听：lsnrctl stop
