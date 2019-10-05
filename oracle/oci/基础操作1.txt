@@ -1,0 +1,73 @@
+ocilib 
+下载地址：http://vrogier.github.io/ocilib/
+编译： 配置环境变量 ORACLE_HOME=/data/oracle/app/product/11.2.0/db_1
+执行编译命令
+--prefix=/home/oracle/install/ocilib --with-oracle-lib-path=/data/oracle/app/product/11.2.0/db_1/lib  \
+--with-oracle-headers-path=/data/oracle/app/product/11.2.0/db_1/rdbms/public/
+make
+make install
+
+测试：
+#include "ocilib.h"
+
+void err_handler(OCI_Error *err)
+{
+    printf("%s\n", OCI_ErrorGetString(err));
+}
+int main(int argc, char *argv[])
+{
+    OCI_Connection* cn;
+    OCI_Statement* st;
+    OCI_Resultset* rs;
+    // init with err_handler
+    OCI_Initialize(err_handler, NULL, OCI_ENV_DEFAULT);
+    // connect
+   cn = OCI_ConnectionCreate("127.0.0.1:1521/dbsrv2", "user", "password", OCI_SESSION_DEFAULT);
+    // version
+    printf("Server major version : %i\n", OCI_GetServerMajorVersion(cn));
+    printf("Server minor version : %i\n", OCI_GetServerMinorVersion(cn));
+    printf("Server revision version : %i\n\n", OCI_GetServerRevisionVersion(cn));
+    printf("Connection version : %i\n\n", OCI_GetVersionConnection(cn));
+    // select
+    st = OCI_StatementCreate(cn);
+    OCI_ExecuteStmt(st, "select intcol, strcol from table");
+    rs = OCI_GetResultset(st);
+    while (OCI_FetchNext(rs))
+    {
+        printf("%i - %s\n", OCI_GetInt(rs, 1), OCI_GetString(rs, 2));
+    }
+    // clean up
+    OCI_Cleanup();
+    return EXIT_SUCCESS;
+}
+
+编译命令：
+[oracle@host122 testcase]$ cat gcc.sh 
+g++ -g -o  ${1} ${1}.c -I /data/oracle/app/product/11.2.0/db_1/rdbms/public -I ~/install/ocilib/include/ 、
+-L ~/install/ocilib/lib -L /data/oracle/app/product/11.2.0/db_1/lib/ -locilib -lclntsh
+：：有的oracle环境是不需要指定-lcIntsh的，但是这个不指定会报错：
+/usr/bin/ld: /tmp/ccbJxCEQ.o: undefined reference to symbol 'OCILobRead'
+/data/oracle/app/product/11.2.0/db_1/lib/libclntsh.so.11.1: error adding symbols: DSO missing from command line
+collect2: error: ld returned 1 exit status
+另一方面，cn = OCI_ConnectionCreate("127.0.0.1:1521/dbsrv2", "user", "password", OCI_SESSION_DEFAULT); 可以写成：
+cn = OCI_ConnectionCreate("dbsrv2", "user", "password", OCI_SESSION_DEFAULT); 但是这个环境不能这样写，会报database 名称错误。
+
+
+执行结果：
+[oracle@host122 testcase]$ sh gcc.sh  base2
+[oracle@host122 testcase]$ ./base2
+Server major version : 11
+Server minor version : 2
+Server revision version : 0
+
+Connection version : 1120
+
+ORA-00906: missing left parenthesis
+
+The statement must be described to perform this operation
+A null Resultset handle has been provided
+
+
+
+
+
