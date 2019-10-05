@@ -298,3 +298,17 @@ char* GetType(ub2 nType)
 	}
 	return str;
 }
+
+
+执行结果：
+[oracle@host122 testcase]$ ./column1
+
+已经成功连上数据库orcl
+成功建立用户会话!
+获取关系表ocitest.student的表结构信息
+名称             空?      类型             列长度   列精度   小数位数
+---------------- -------- ---------------- -------- -------- --------
+ID                        NUMBER           22       38       0        
+NAME                      VARCHAR2         20       0        0        
+AGE                       NUMBER           22       38       0        
+结束会话和数据库连接!
