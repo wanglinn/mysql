@@ -136,6 +136,12 @@ int main()
 	CheckErr(errhp, OCIStmtExecute(svchp, stmthp, errhp, 1, 0, NULL, NULL,
 		OCI_DESCRIBE_ONLY));
 
+	//获取执行语句对应的列数
+	int parmcnt = 0;
+	parm_status = OCIAttrGet ((void *)stmthp, (ub4)OCI_HTYPE_STMT, (void *)
+			      &parmcnt, (ub4 *) 0, (ub4)OCI_ATTR_PARAM_COUNT, errhp);
+	fprintf(stdout, "get the sql column number = %d\n", parmcnt);
+
 	counter = 1;
 	parm_status = OCIParamGet(stmthp, OCI_HTYPE_STMT, errhp, (void**)&paramhp,
 		(ub4) counter);
