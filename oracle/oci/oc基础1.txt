@@ -1,0 +1,139 @@
+OCI 操作 key point
+
+1. OCI_ATTR_ROW_COUNT
+
+
+2. 句柄类型
+
+OCI_HTYPE_ENV       //环境句柄  
+OCI_HTYPE_SERVER    //服务器句柄 属性类型 OCI_ATTR_SERVER
+OCI_HTYPE_SVCCTX    //服务器上下文句柄
+OCI_HTYPE_ERROR     //错误句柄
+OCI_HTYPE_SESSION   //会话句柄   属性类型 OCI_ATTR_SESSION
+
+宏定义
+OCI_ERROR
+OCI_SUCCESS
+OCI_SUCCESS_WITH_INFO 
+OCI_STMT_SELECT   //语句类型
+OCI_NO_DATA       //不再有结果可获取
+OCI_ATTR_STMT_TYPE  //当前sql语句类型
+OCI_STMT_BEGIN
+OCI_STMT_SELECT OCI_STMT_INSERT
+OCI_STMT_UPDATE OCI_STMT_DELETE
+OCI_ATTR_PARAM_COUNT — 返回语句选择列表中的列数
+OCI_DEFAULT          //使用OCI默认的环境
+OCI_INVALID_HANDLE  //传递给函数的参数为无效句柄，或传回的句柄无效
+OCI_CONTINUE  —  回调函数返回代码，说明回调函数需要OCI库恢复其正常的处理操作
+OCI_NEED_DATA — 需要应用程序 提供运行时刻的数据
+OCI_STILL_EXECUTING  — 服务环境建立在非阻塞模式，OCI函数调用正在执行中。
+
+
+3. 常用函数
+
+OCIInitialize     //环境初始化
+OCIEnvInit        //环境初始化
+OCIHandleAlloc    //申请句柄
+OCIHandleFree     //释放句柄
+OCIAttrSet        //属性设置
+OCIAttrGet        //属性获取
+OCIServerDetach   //服务器上下文句柄剥离
+OCISessionBegin   //开启会话
+OCISessionEnd     //会话结束
+OCIErrorGet       //获取错误信息
+OCITransRollback  //事务回退
+OCITransCommit    //事务提交
+OCIServerAttach   //多用户方式连接数据库服务器
+OCIStmtPrepare    //预执行
+OCIStmtFetch2     //预执行
+OCIDefineByPos    //绑定变量位置输出
+OCIBindByName     //绑定变量名称输入
+OCIBindByPos      //绑定变量位置输入
+OCIStmtExecute    //执行语句
+OCIStmtFetch      //获取执行结果
+OCIBindArrayOfStruct  //批量插入，一般指数组
+
+
+示例：
+
+/* 创建OCI环境 */
+if (OCIInitialize((ub4)OCI_THREADED|OCI_OBJECT, (dvoid *)0
+			, (dvoid * (*)(dvoid *,size_t))0
+			, (dvoid * (*)(dvoid *, dvoid*, size_t))0
+			, (void (*)(dvoid *, dvoid*))0))
+
+if(OCIEnvInit((OCIEnv **)&hdbc->envhp, (ub4)OCI_DEFAULT
+		, (size_t)0, (dvoid **)0))
+			
+			
+/* 申请用户会话句柄 */
+OCIHandleAlloc((dvoid *)hdbc->envhp, (dvoid **)&hdbc->authp
+			 , (ub4)OCI_HTYPE_SESSION,(size_t)0, (dvoid **)0);
+
+/* 设置服务环境的服务器属性 */
+OCIAttrSet((dvoid *)hdbc->svchp, (ub4)OCI_HTYPE_SVCCTX
+		, (dvoid *)hdbc->srvhp, (ub4)0
+		, (ub4)OCI_ATTR_SERVER, hdbc->errhp);
+
+/* 设置会话所使用的用户帐户和密码 */
+if (OCIAttrSet((dvoid *)hdbc->authp, (ub4)OCI_HTYPE_SESSION
+			 , (dvoid *)pwd,(ub4)strlen((char *)pwd)
+			 , (ub4)OCI_ATTR_PASSWORD,hdbc->errhp))
+if (OCIAttrSet((dvoid *)hdbc->authp, (ub4)OCI_HTYPE_SESSION
+			 , (dvoid *)uid,(ub4)strlen((char *)uid)
+			 , (ub4)OCI_ATTR_USERNAME,hdbc->errhp))
+
+
+if (OCIAttrSet((dvoid *)hdbc->svchp, (ub4)OCI_HTYPE_SVCCTX
+			 , (dvoid *)hdbc->authp,(ub4)0
+			 , (ub4)OCI_ATTR_SESSION,hdbc->errhp))
+ 
+/* 获取受delete insert update所影响的列数 */
+rc = OCIAttrGet((dvoid *)hdbc->stmthp, (ub4)OCI_HTYPE_STMT,
+			    (dvoid *)&row_num,(ub4 *)0,
+			     OCI_ATTR_ROW_COUNT,hdbc->errhp);
+
+ 
+if ( (rc = OCISessionBegin(hdbc->svchp, hdbc->errhp,hdbc->authp
+				  , (ub4)OCI_CRED_RDBMS,(ub4)OCI_DEFAULT)))
+ 
+OCISessionEnd(hdbc->svchp, hdbc->errhp, hdbc->authp, (ub4)0);
+ 
+OCIServerDetach(hdbc->srvhp, hdbc->errhp, (ub4)OCI_DEFAULT);
+
+OCIHandleFree((dvoid *)hdbc->srvhp, (ub4)OCI_HTYPE_SERVER);
+
+OCIErrorGet((dvoid *)hdbc->errhp, 1, NULL, &errcode,(text*)errBuf, (ub4)sizeof(errBuf), (ub4)OCI_HTYPE_ERROR);
+
+OCITransRollback(hdbc->svchp, hdbc->errhp, (ub4)0);
+
+rc = OCIStmtFetch(hdbc->stmthp, hdbc->errhp, 1, OCI_FETCH_NEXT
+				, OCI_DEFAULT);
+
+//多用户方式连接数据库服务器,设置链接的服务器名pConnectChar
+sr= OCIServerAttach(ociCtx_p->SrvHP,ociCtx_p->ErrHP, (text *)pConnectChar, strlen(pConnectChar), 0);
+
+//预执行
+retcode = OCIStmtPrepare (ociCtx_p->StmtHP, ociCtx_p->ErrHP, (unsigned char *)sqlcmd,
+	ub4)strlen((char *)sqlcmd),
+	(ub4) OCI_NTV_SYNTAX, (ub4) OCI_DEFAULT);    
+ 
+//定义输出变量
+retcode=OCIDefineByPos(ociCtx_p->StmtHP, &defcolp[0], ociCtx_p->ErrHP, (ub4)1, (dvoid *)&pointId,
+        (sb4)sizeof(int), SQLT_INT , (dvoid *)&indp[0], (ub2 *)0,
+         (ub2 *)0, (ub4) OCI_DEFAULT);
+
+//执行SQL语句
+retcode=OCIStmtExecute(ociCtx_p->SvcHP, ociCtx_p->StmtHP, ociCtx_p->ErrHP, (ub4) 1, (ub4) 0,
+                       (CONST OCISnapshot *) NULL, (OCISnapshot *) NULL, OCI_DEFAULT );
+
+
+//预执行					   
+while(OCIStmtFetch2(ph->phOCIstmt, ph->phOCIErr, 1, OCI_FETCH_NEXT, OCI_FETCH_NEXT, OCI_DEFAULT) != OCI_NO_DATA);
+ 
+
+参考：
+https://blog.csdn.net/zhouzhaoxiong1227/article/details/52529940
+https://blog.csdn.net/evgd2288/article/details/6607035
+http://blog.sina.com.cn/s/blog_687960370101h4ie.html
+
