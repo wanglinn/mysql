@@ -1,0 +1,188 @@
+/*--------------------- User Callback Return Values -------------------------*/
+#define OCI_CONTINUE -24200    /* Continue with the body of the OCI function */
+#define OCI_ROWCBK_DONE   -24201              /* done with user row callback */
+
+/*----------------------- Execution Modes -----------------------------------*/
+#define OCI_BATCH_MODE             0x00000001 /* batch the oci stmt for exec */
+#define OCI_EXACT_FETCH            0x00000002  /* fetch exact rows specified */
+/* #define                         0x00000004                      available */
+#define OCI_STMT_SCROLLABLE_READONLY \
+                                   0x00000008 /* if result set is scrollable */
+#define OCI_DESCRIBE_ONLY          0x00000010 /* only describe the statement */
+#define OCI_COMMIT_ON_SUCCESS      0x00000020  /* commit, if successful exec */
+#define OCI_NON_BLOCKING           0x00000040                /* non-blocking */
+#define OCI_BATCH_ERRORS           0x00000080  /* batch errors in array dmls */
+#define OCI_PARSE_ONLY             0x00000100    /* only parse the statement */
+#define OCI_EXACT_FETCH_RESERVED_1 0x00000200                    /* reserved */
+#define OCI_SHOW_DML_WARNINGS      0x00000400
+
+
+#define OCI_ATTR_PARAM_COUNT 18       /* number of column in the select list */
+#define OCI_ATTR_ROWID   19                                     /* the rowid */
+#define OCI_ATTR_CHARSET  20                      /* the character set value */
+#define OCI_ATTR_NCHAR   21                                    /* NCHAR type */
+#define OCI_ATTR_USERNAME 22                           /* username attribute */
+#define OCI_ATTR_PASSWORD 23                           /* password attribute */
+#define OCI_ATTR_STMT_TYPE   24                            /* statement type */
+#define OCI_ATTR_INTERNAL_NAME   25             /* user friendly global name */
+#define OCI_ATTR_EXTERNAL_NAME   26      /* the internal name for global txn */
+#define OCI_ATTR_XID     27           /* XOPEN defined global transaction id */
+#define OCI_ATTR_TRANS_LOCK 28                                            /* */
+#define OCI_ATTR_TRANS_NAME 29    /* string to identify a global transaction */
+#define OCI_ATTR_HEAPALLOC 30                /* memory allocated on the heap */
+#define OCI_ATTR_CHARSET_ID 31                           /* Character Set ID */
+#define OCI_ATTR_CHARSET_FORM 32                       /* Character Set Form */
+#define OCI_ATTR_MAXDATA_SIZE 33       /* Maximumsize of data on the server  */
+#define OCI_ATTR_CACHE_OPT_SIZE 34              /* object cache optimal size */
+#define OCI_ATTR_CACHE_MAX_SIZE 35   /* object cache maximum size percentage */
+#define OCI_ATTR_PINOPTION 36             /* object cache default pin option */
+#define OCI_ATTR_ALLOC_DURATION 37
+                                 /* object cache default allocation duration */
+#define OCI_ATTR_PIN_DURATION 38        /* object cache default pin duration */
+#define OCI_ATTR_FDO          39       /* Format Descriptor object attribute */
+#define OCI_ATTR_POSTPROCESSING_CALLBACK 40
+                                         /* Callback to process outbind data */
+#define OCI_ATTR_POSTPROCESSING_CONTEXT 41
+                                 /* Callback context to process outbind data */
+
+/* input data types */
+#define SQLT_CHR  1                        /* (ORANET TYPE) character string */
+#define SQLT_NUM  2                          /* (ORANET TYPE) oracle numeric */
+#define SQLT_INT  3                                 /* (ORANET TYPE) integer */
+#define SQLT_FLT  4                   /* (ORANET TYPE) Floating point number */
+#define SQLT_STR  5                                /* zero terminated string */
+#define SQLT_VNU  6                        /* NUM with preceding length byte */
+#define SQLT_PDN  7                  /* (ORANET TYPE) Packed Decimal Numeric */
+#define SQLT_LNG  8                                                  /* long */
+#define SQLT_VCS  9                             /* Variable character string */
+#define SQLT_NON  10                      /* Null/empty PCC Descriptor entry */
+#define SQLT_RID  11                                                /* rowid */
+#define SQLT_DAT  12                                /* date in oracle format */
+#define SQLT_VBI  15                                 /* binary in VCS format */
+#define SQLT_BFLOAT 21                                /* Native Binary float*/
+#define SQLT_BDOUBLE 22                             /* NAtive binary double */
+#define SQLT_BIN  23                                  /* binary data(DTYBIN) */
+#define SQLT_LBI  24                                          /* long binary */
+#define SQLT_UIN  68                                     /* unsigned integer */
+#define SQLT_SLS  91                        /* Display sign leading separate */
+#define SQLT_LVC  94                                  /* Longer longs (char) */
+#define SQLT_LVB  95                                   /* Longer long binary */
+#define SQLT_AFC  96                                      /* Ansi fixed char */
+#define SQLT_AVC  97                                        /* Ansi Var char */
+#define SQLT_IBFLOAT  100                          /* binary float canonical */
+#define SQLT_IBDOUBLE 101                         /* binary double canonical */
+#define SQLT_CUR  102                                        /* cursor  type */
+#define SQLT_RDD  104                                    /* rowid descriptor */
+#define SQLT_LAB  105                                          /* label type */
+#define SQLT_OSL  106                                        /* oslabel type */
+
+#define SQLT_NTY  108                                   /* named object type */
+#define SQLT_REF  110                                            /* ref type */
+#define SQLT_CLOB 112                                       /* character lob */
+#define SQLT_BLOB 113                                          /* binary lob */
+#define SQLT_BFILEE 114                                   /* binary file lob */
+#define SQLT_CFILEE 115                                /* character file lob */
+#define SQLT_RSET 116                                     /* result set type */
+#define SQLT_NCO  122      /* named collection type (varray or nested table) */
+#define SQLT_VST  155                                      /* OCIString type */
+#define SQLT_ODT  156                                        /* OCIDate type */
+
+
+/*-------------------------Object Ptr Types----------------------------------*/
+#define OCI_OTYPE_NAME 1                                      /* object name */
+#define OCI_OTYPE_REF  2                                       /* REF to TDO */
+#define OCI_OTYPE_PTR  3                                       /* PTR to TDO */
+
+
+/*--------------------------- OCI Parameter Types ---------------------------*/
+#define OCI_PTYPE_UNK                 0                         /* unknown   */
+#define OCI_PTYPE_TABLE               1                         /* table     */
+#define OCI_PTYPE_VIEW                2                         /* view      */
+#define OCI_PTYPE_PROC                3                         /* procedure */
+#define OCI_PTYPE_FUNC                4                         /* function  */
+#define OCI_PTYPE_PKG                 5                         /* package   */
+#define OCI_PTYPE_TYPE                6                 /* user-defined type */
+#define OCI_PTYPE_SYN                 7                         /* synonym   */
+#define OCI_PTYPE_SEQ                 8                         /* sequence  */
+#define OCI_PTYPE_COL                 9                         /* column    */
+#define OCI_PTYPE_ARG                 10                        /* argument  */
+#define OCI_PTYPE_LIST                11                        /* list      */
+#define OCI_PTYPE_TYPE_ATTR           12    /* user-defined type's attribute */
+#define OCI_PTYPE_TYPE_COLL           13        /* collection type's element */
+#define OCI_PTYPE_TYPE_METHOD         14       /* user-defined type's method */
+#define OCI_PTYPE_TYPE_ARG            15   /* user-defined type method's arg */
+#define OCI_PTYPE_TYPE_RESULT         16/* user-defined type method's result */
+#define OCI_PTYPE_SCHEMA              17                           /* schema */
+#define OCI_PTYPE_DATABASE            18                         /* database */
+#define OCI_PTYPE_RULE                19                             /* rule */
+#define OCI_PTYPE_RULE_SET            20                         /* rule set */
+#define OCI_PTYPE_EVALUATION_CONTEXT  21               /* evaluation context */
+#define OCI_PTYPE_TABLE_ALIAS         22                      /* table alias */
+#define OCI_PTYPE_VARIABLE_TYPE       23                    /* variable type */
+#define OCI_PTYPE_NAME_VALUE          24                  /* name value pair */
+
+
+#define OCI_ATTR_UNK              101                   /* unknown attribute */
+#define OCI_ATTR_NUM_COLS         102                   /* number of columns */
+#define OCI_ATTR_LIST_COLUMNS     103        /* parameter of the column list */
+#define OCI_ATTR_RDBA             104           /* DBA of the segment header */
+#define OCI_ATTR_CLUSTERED        105      /* whether the table is clustered */
+#define OCI_ATTR_PARTITIONED      106    /* whether the table is partitioned */
+#define OCI_ATTR_INDEX_ONLY       107     /* whether the table is index only */
+#define OCI_ATTR_LIST_ARGUMENTS   108      /* parameter of the argument list */
+#define OCI_ATTR_LIST_SUBPROGRAMS 109    /* parameter of the subprogram list */
+#define OCI_ATTR_REF_TDO          110          /* REF to the type descriptor */
+#define OCI_ATTR_LINK             111              /* the database link name */
+#define OCI_ATTR_MIN              112                       /* minimum value */
+#define OCI_ATTR_MAX              113                       /* maximum value */
+#define OCI_ATTR_INCR             114                     /* increment value */
+#define OCI_ATTR_CACHE            115   /* number of sequence numbers cached */
+#define OCI_ATTR_ORDER            116     /* whether the sequence is ordered */
+#define OCI_ATTR_HW_MARK          117                     /* high-water mark */
+#define OCI_ATTR_TYPE_SCHEMA      118                  /* type's schema name */
+#define OCI_ATTR_TIMESTAMP        119             /* timestamp of the object */
+#define OCI_ATTR_NUM_ATTRS        120                /* number of sttributes */
+#define OCI_ATTR_NUM_PARAMS       121                /* number of parameters */
+#define OCI_ATTR_OBJID            122       /* object id for a table or view */
+#define OCI_ATTR_PTYPE            123           /* type of info described by */
+#define OCI_ATTR_PARAM            124                /* parameter descriptor */
+#define OCI_ATTR_OVERLOAD_ID      125     /* overload ID for funcs and procs */
+#define OCI_ATTR_TABLESPACE       126                    /* table name space */
+#define OCI_ATTR_TDO              127                       /* TDO of a type */
+#define OCI_ATTR_LTYPE            128                           /* list type */
+#define OCI_ATTR_PARSE_ERROR_OFFSET 129                /* Parse Error offset */
+#define OCI_ATTR_IS_TEMPORARY     130          /* whether table is temporary */
+#define OCI_ATTR_IS_TYPED         131              /* whether table is typed */
+#define OCI_ATTR_DURATION         132         /* duration of temporary table */
+#define OCI_ATTR_IS_INVOKER_RIGHTS 133                  /* is invoker rights */
+#define OCI_ATTR_OBJ_NAME         134           /* top level schema obj name */
+
+
+
+/*-------------------------Descriptor Types----------------------------------*/
+                                    /* descriptor values range from 50 - 255 */
+#define OCI_DTYPE_FIRST 50                 /* start value of descriptor type */
+#define OCI_DTYPE_LOB 50                                     /* lob  locator */
+#define OCI_DTYPE_SNAP 51                             /* snapshot descriptor */
+#define OCI_DTYPE_RSET 52                           /* result set descriptor */
+#define OCI_DTYPE_PARAM 53  /* a parameter descriptor obtained from ocigparm */
+#define OCI_DTYPE_ROWID  54                              /* rowid descriptor */
+#define OCI_DTYPE_COMPLEXOBJECTCOMP  55
+
+
+
+#ifndef OCI_FLAGS
+#define OCI_FLAGS
+#define OCI_ONE_PIECE 0                                         /* one piece */
+#define OCI_FIRST_PIECE 1                                 /* the first piece */
+#define OCI_NEXT_PIECE 2                          /* the next of many pieces */
+#define OCI_LAST_PIECE 3                                   /* the last piece */
+#endif
+
+
+/* CHAR/NCHAR/VARCHAR2/NVARCHAR2/CLOB/NCLOB char set "form" information */
+#define SQLCS_IMPLICIT 1     /* for CHAR, VARCHAR2, CLOB w/o a specified set */
+#define SQLCS_NCHAR    2                  /* for NCHAR, NCHAR VARYING, NCLOB */
+#define SQLCS_EXPLICIT 3   /* for CHAR, etc, with "CHARACTER SET ..." syntax */
+#define SQLCS_FLEXIBLE 4                 /* for PL/SQL "flexible" parameters */
+#define SQLCS_LIT_NULL 5      /* for typecheck of NULL and empty_clob() lits */
