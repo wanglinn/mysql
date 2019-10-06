@@ -1,0 +1,78 @@
+ oracle 存储过程以 '/' 作为结束符。
+ 若dbms_output.put_line 没打印结果输出，则设置 set serveroutput on;
+ 执行存储过程可以用 call 和 exec，两个区别如下：
+ 在sqlplus中这两种方法都可以使用：
+exec pro_name(参数1..);
+call pro_name(参数1..);
+区别：
+exec是sqlplus命令，只能在sqlplus中使用；call为SQL命令，没有限制.
+存储过程没有参数时,exec可以直接跟过程名（可以省略()），但call则必须带上().
+
+下面内容主要来自：https://www.cnblogs.com/dc-earl/articles/9260111.html
+ 
+1. 示例1
+create or replace procedure myDemo01
+as
+   begin
+       dbms_output.put_line('hello word, my name is stored procedure');
+   end;
+ /
+ 
+ 执行存储过程 call myDemo01();
+ 
+ 2. 声明变量及赋值
+ 
+ create or replace procedure myDemo02
+as
+name varchar(10);--声明变量，注意varchar需要指定长度
+age int;
+begin
+  name:='xiaoming';--变量赋值
+  age:=18;
+  dbms_output.put_line('name='||name||', age='||age);--通过||符号达到连接字符串的功能
+end;
+/
+
+3. 带参数
+create or replace procedure myDemo03(name in varchar,age in int)
+as
+begin
+  dbms_output.put_line('name='||name||', age='||age);
+end;
+ 
+begin
+  myDemo03('xiaoming',18);
+end;
+/
+
+4. in, out 参数
+
+create or replace procedure myDemo05(name out varchar,age in int)
+as
+begin
+       dbms_output.put_line('age='||age);
+  select 'xiaoming' into name from dual;
+end;
+/
+
+执行， 下面是PL/SQL模式
+
+declare
+ name varchar(10);
+ age int;
+begin
+  myDemo05(name=>name,age=>10);
+  dbms_output.put_line('name='||name);
+end;
+/
+
+
+
+
+ 
+ 
+
+ 
+ 
+ 
+ 
