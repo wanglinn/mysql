@@ -1,0 +1,97 @@
+1. mysql 存储过程定义及使用
+
+个人理解：MySQL 存储过程类似语句的集合，有输入及输出(在参数中定义in, out), 存储过程
+不是一个事务，但可以放到事务中去，或者里面放事务。
+
+创建存储过程示例：
+1. 无入参、出参
+drop procedure if exists sp;
+CREATE PROCEDURE sp() select 1;
+call sp();
+
+2. 入参
+drop table if exists t1;
+create table t1(id int);
+
+drop procedure if exists sp2;
+
+/* 以 // 表示结尾 */
+delimiter //
+create procedure sp2(in p int)
+comment 'insert into t1 int value'
+begin
+/* 定义一个整形变量 */
+declare v1 int;
+
+/* 将输入参数的值赋给变量 */
+set v1 = p;
+
+/* 执行插入操作 */
+insert into t1(id) values(v1);
+end
+/* // 表示存储过程尾 */
+//
+
+/* 恢复 ; 结尾 */
+delimiter ;
+
+
+/* 调用这个存储过程 */
+call sp2(1);
+/* 去数据库查看调用之后的结果 */
+select * from t1;
+
+
+3. 出参
+
+drop table if exists t1;
+create table t1(id int);
+insert into t1 values(1);
+insert into t1 values(2);
+
+drop procedure if exists sp3;
+delimiter //
+create procedure sp3(out p int)
+DETERMINISTIC
+begin
+select max(id) into p from t1;
+end
+//
+
+delimiter ;
+
+call sp3(@pv);
+
+select @pv;
+
+
+4. 入参及出参 合二为一
+
+drop table if exists t1;
+create table t1(id int);
+insert into t1 values(1);
+insert into t1 values(2);
+
+drop procedure if exists sp4;
+delimiter //
+create procedure sp4(inout p4 int)
+begin
+if p4 = 4 then
+set @pg = 400;
+else
+set @pg = 500;
+end if;
+
+select @pg;
+
+end //
+
+delimiter ;
+
+/* 这里需要先设置一个已赋值的变量，然后再作为参数传入 */
+set @pp = 4 ;
+call sp4(@pp) ;
+
+
+
+
