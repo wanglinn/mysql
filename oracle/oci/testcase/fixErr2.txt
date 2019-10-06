@@ -1,0 +1,384 @@
+编译错误分析 20191005
+目录
+1. OCI_CONTINUE
+2. OCI_DESCRIBE_ONLY
+3. OCI_COMMIT_ON_SUCCESS
+4. OCI_ATTR_PARAM_COUNT
+5. SQLT_BLOB
+6. SQLT_CLOB
+7. SQLT_AFC
+8. OCI_OTYPE_NAME （待odbc验证）
+9. OCI_PTYPE_PKG（待odbc验证）
+10. OCI_ATTR_PARAM
+11. OCI_ATTR_LIST_SUBPROGRAMS
+12. OCI_ATTR_NUM_PARAMS
+13. OCI_ATTR_PTYPE
+
+
+1. OCI_CONTINUE
+/*--------------------- User Callback Return Values -------------------------*/
+#define OCI_CONTINUE -24200    /* Continue with the body of the OCI function */
+OCI_CONTINUE — 回调函数返回代码，说明回调函数需要OCI库恢复其正常的处理操作。
+用户定义的回调函数的唯一有效的返回值是OCI_CONTINUE。其他任何值都将导致此错误。
+
+应用程序：
+
+if (retval = OCILobWrite2(svchp, errhp, lobl, &byte_amt, &char_amt, offset,
+ (void*)bufp, (ub4)nbytes, OCI_FIRST_PIECE, (void *)0, cbk_write_lob, 
+ (ub2) 0, (ub1) SQLCS_IMPLICIT))
+{
+ (void) printf("ERROR: OCILobWrite2().\n");
+ report_error();
+ return;
+}
+...
+
+
+sb4 cbk_write_lob(ctxp, bufxp, lenp, piecep, changed_bufpp, changed_lenp)
+void *ctxp;
+void *bufxp; 
+oraub8 *lenp; 
+ub1 *piecep;
+void **changed_bufpp;
+oraub8 *changed_lenp; 
+{ 
+    /*-- code to fill bufxp with data goes here. *lenp should reflect the
+    size and should be less than or equal to MAXBUFLEN -- */
+    /* --Optional code to set changed_bufpp and changed_lenp if the
+    buffer needs to be changed dynamically --*/
+    if (this is the last data buffer) 
+    *piecep = OCI_LAST_PIECE; 
+    else
+    *piecep = OCI_NEXT_PIECE; 
+    return OCI_CONTINUE;
+}
+
+
+
+2. OCI_DESCRIBE_ONLY
+
+#define OCI_DESCRIBE_ONLY          0x00000010 /* only describe the statement */
+:: 一般用在select 语句执行中，若是insert 则会报错 zero iteration count
+
+示例：
+/* initialize svchp, stmhp, errhp, rowoff, iters, snap_in, snap_out */
+/* set the execution mode to OCI_DESCRIBE_ONLY. Note that setting the mode to
+OCI_DEFAULT does an implicit describe of the statement in addition to executing
+the statement */
+checkerr(errhp, OCIStmtExecute(svchp, stmthp, errhp, 0, 0,
+ (OCISnapshot *) 0, (OCISnapshot *) 0, OCI_DESCRIBE_ONLY));
+
+该参数作用见 函数 OCIStmtExecute ：
+sword OCIStmtExecute ( OCISvcCtx *svchp,
+                        OCIStmt *stmtp,
+                        OCIError *errhp,
+                        ub4 iters,
+                        ub4 rowoff,
+                        const OCISnapshot *snap_in,
+                        OCISnapshot *snap_out,
+                        ub4 mode );
+
+
+mode (IN)
+The modes are:
+■ OCI_BATCH_ERRORS - See "Batch Error Mode" on page 4-7, for information about 
+this mode. 
+■ OCI_COMMIT_ON_SUCCESS - When a statement is executed in this mode, the current 
+transaction is committed after execution, if execution completes successfully.
+■ OCI_DEFAULT - Calling OCIStmtExecute() in this mode executes the statement. It 
+also implicitly returns describe information about the select-list.
+
+■ OCI_DESCRIBE_ONLY - This mode is for users who wish to describe a query prior to 
+execution. Calling OCIStmtExecute() in this mode does not execute the statement, 
+but it does return the select-list description. To maximize performance, it is 
+recommended that applications execute the statement in default mode and use the 
+implicit describe which accompanies the execution.
+■ OCI_EXACT_FETCH - Used when the application knows in advance exactly how 
+many rows it will be fetching. This mode turns prefetching off for Oracle release 8 
+or later mode, and requires that defines be done before the execute call. Using this 
+mode cancels the cursor after the desired rows are fetched and may result in 
+reduced server-side resource usage.
+■ OCI_PARSE_ONLY - This mode allows the user to parse the query prior to execution. 
+Executing in this mode parses the query and returns parse errors in the SQL, if 
+any. Users must note that this will involve an additional round trip to the server. 
+To maximize performance, it is recommended that the user execute the statement 
+in the default mode which, as part of a bundled operation, parses the statement. 
+■ OCI_STMT_SCROLLABLE_READONLY - Required for the result set to be scrollable. The 
+result set cannot be updated. See "Fetching Results" on page 4-13. Cannot be used 
+with any other mode.
+The modes are not mutually exclusive and can be used together, except for OCI_STMT_
+SCROLLABLE_READONLY.
+
+3. OCI_COMMIT_ON_SUCCESS
+
+见上面2
+
+
+4. OCI_ATTR_PARAM_COUNT
+
+ub4 parmcnt;
+/* get the number of columns in the select list */
+err = OCIAttrGet ((void *)stmhp, (ub4)OCI_HTYPE_STMT, (void *)
+ &parmcnt, (ub4 *) 0, (ub4)OCI_ATTR_PARAM_COUNT, errhp);
+
+https://github.com/wanglinn/mysql/blob/master/oracle/oci/testcase/column_info2.c
+
+
+
+获取执行语句对应的列数， 对于odbc，使用如下方式获取
+
+ok_stmt(hstmt, SQLColAttribute(hstmt, 1, SQL_COLUMN_COUNT, NULL, 0, NULL, &count));
+
+获取列的名称及数据类型
+/* Check without FLAG_NO_BINARY_RESULT */
+ok_sql(hstmt, "SELECT CONCAT('\x80', 100) concated");
+
+ok_stmt(hstmt, SQLDescribeCol(hstmt, 1, column_name, sizeof(column_name),
+                            &name_length, &data_type, &column_size,
+                            &decimal_digits, &nullable));
+
+
+5. SQLT_BLOB
+#define SQLT_CLOB 112                                       /* character lob */
+#define SQLT_BLOB 113                                          /* binary lob */
+
+6. SQLT_CLOB
+
+
+
+7. SQLT_AFC
+
+#define SQLT_AFC  96                                      /* Ansi fixed char */
+
+SQLT_AFC (CHAR)
+
+如何使用 SQLT_AFC 呢？
+
+http://www.mamicode.com/info-detail-335889.html
+
+SQLT_AFC  ANSI 固定字符， 一种字符集格式，同类的有unicode
+
+
+示例：
+https://www.2cto.com/database/201401/271003.html
+
+
+对于 odbc
+等价于字符串类型， 等价于SQL_CHAR
+
+8. OCI_OTYPE_NAME
+
+#define OCI_OTYPE_NAME 1                                      /* object name */
+
+//针对表
+/* get the describe handle for the table */
+if (OCIDescribeAny(svch, errh, (void *)objptr, objp_len, OCI_OTYPE_NAME, 0,
+ OCI_PTYPE_TABLE, dschp))
+
+
+https://github.com/wanglinn/mysql/blob/master/oracle/oci/testcase/column_info1.c
+
+
+//针对存储过程
+/* get the describe handle for the procedure */
+if (OCIDescribeAny(svch, errh, (void *)objptr, objp_len, OCI_OTYPE_NAME, 0,
+ OCI_PTYPE_PROC, dschp))
+
+
+/* get the describe handle for the type */
+if (describe_by_name) 
+{
+ if (OCIDescribeAny(svch, errh, (void *)type_name, type_name_len,
+ OCI_OTYPE_NAME, 0, OCI_PTYPE_TYPE, dschp))
+ return OCI_ERROR;
+}
+else 
+{
+ /* get ref to type using OCIAttrGet */
+ /* get the describe handle for the type */
+ if (OCIDescribeAny(svch, errh, (void*)type_ref, 0, OCI_OTYPE_REF,
+ 0, OCI_PTYPE_TYPE, dschp))
+ return OCI_ERROR;
+}
+
+
+对于ODBC，只能分别对应去实现
+
+
+
+9. OCI_PTYPE_PKG
+
+#define OCI_PTYPE_PKG                 5                         /* package   */
+
+
+10. OCI_ATTR_PARAM
+
+#define OCI_ATTR_PARAM            124                /* parameter descriptor */
+
+
+使用示例：
+https://github.com/wanglinn/mysql/blob/master/oracle/oci/testcase/column_info1.c
+
+
+	//获取关系表的表结构信息
+	printf("获取关系表ocitest.student的表结构信息\n");
+
+	CheckErr(errhp, OCIDescribeAny(svchp, errhp, (dvoid*)tablename, 
+		(ub4)strlen((char*)tablename), OCI_OTYPE_NAME, OCI_DEFAULT, 
+		OCI_PTYPE_TABLE, dschp));
+
+	//获取参数描述
+	CheckErr(errhp, OCIAttrGet(dschp, OCI_HTYPE_DESCRIBE, &parmhp, 
+		0, OCI_ATTR_PARAM, errhp));
+
+
+	//获取表的列(字段)个数
+	CheckErr(errhp, OCIAttrGet(parmhp, OCI_DTYPE_PARAM, &numcols,
+		0, OCI_ATTR_NUM_COLS, errhp));
+
+
+odbc 使用， 见上面 4. OCI_ATTR_PARAM_COUNT
+
+
+11. OCI_ATTR_LIST_SUBPROGRAMS
+
+#define OCI_ATTR_LIST_SUBPROGRAMS 109    /* parameter of the subprogram list */
+
+
+When a parameter is for a package (type OCI_PTYPE_PKG), it has the following type 
+specific attributes:
+OCI_ATTR_LIST_SUBPROGRAMS
+OCI_ATTR_IS_INVOKER_RIGHTS
+
+12. OCI_ATTR_NUM_PARAMS
+
+
+#define OCI_ATTR_NUM_PARAMS       121                /* number of parameters */
+
+
+示例：
+/* get the describe handle for the procedure */
+if (OCIDescribeAny(svch, errh, (void *)objptr, objp_len, OCI_OTYPE_NAME, 0,
+OCI_PTYPE_PROC, dschp))
+return OCI_ERROR;
+
+/* get the parameter handle */
+if (OCIAttrGet((void *)dschp, OCI_HTYPE_DESCRIBE, (void *)&parmh, (ub4 *)0,
+OCI_ATTR_PARAM, errh))
+return OCI_ERROR;
+/* Get the number of arguments and the arg list */
+if (OCIAttrGet((void *)parmh, OCI_DTYPE_PARAM, (void *)&arglst,
+(ub4 *)0, OCI_ATTR_LIST_ARGUMENTS, errh))
+return OCI_ERROR;
+if (OCIAttrGet((void *)arglst, OCI_DTYPE_PARAM, (void *)&numargs, (ub4 *)0,
+OCI_ATTR_NUM_PARAMS, errh))
+return OCI_ERROR;
+
+
+
+13. OCI_ATTR_PTYPE
+
+#define OCI_ATTR_PTYPE            123           /* type of info described by */
+
+
+OCI_ATTR_PTYPE Type of information described by the parameter. Possible values:
+OCI_PTYPE_TABLE - table
+OCI_PTYPE_VIEW - view
+OCI_PTYPE_PROC - procedure
+OCI_PTYPE_FUNC - function
+OCI_PTYPE_PKG - package
+OCI_PTYPE_TYPE - type
+OCI_PTYPE_TYPE_ATTR - attribute of a type
+OCI_PTYPE_TYPE_COLL - collection type information
+OCI_PTYPE_TYPE_METHOD - method of a type
+OCI_PTYPE_SYN - synonym
+OCI_PTYPE_SEQ - sequence
+OCI_PTYPE_COL - column of a table or view
+OCI_PTYPE_ARG - argument of a function or procedure
+OCI_PTYPE_TYPE_ARG - argument of a type method
+OCI_PTYPE_TYPE_RESULT - results of a method
+OCI_PTYPE_LIST - column list for tables and views, argument list for
+functions and procedures, or subprogram list for packages.
+OCI_PTYPE_SCHEMA - schema
+OCI_PTYPE_DATABASE - database
+OCI_PTYPE_UNK - unknown schema object
+
+14. OCI_PTYPE_PROC
+
+#define OCI_PTYPE_PROC                3                         /* procedure */
+
+获取存储过程相关属性
+示例：
+/* get the describe handle for the procedure */
+if (OCIDescribeAny(svch, errh, (void *)objptr, objp_len, OCI_OTYPE_NAME, 0,
+OCI_PTYPE_PROC, dschp))
+return OCI_ERROR;
+
+15.  OCI_ATTR_LIST_ARGUMENTS
+
+见 11
+#define OCI_ATTR_LIST_ARGUMENTS   108      /* parameter of the argument list */
+
+
+/* get the parameter handle */
+if (OCIAttrGet((void *)dschp, OCI_HTYPE_DESCRIBE, (void *)&parmh, (ub4 *)0,
+OCI_ATTR_PARAM, errh))
+return OCI_ERROR;
+/* Get the number of arguments and the arg list */
+if (OCIAttrGet((void *)parmh, OCI_DTYPE_PARAM, (void *)&arglst,
+(ub4 *)0, OCI_ATTR_LIST_ARGUMENTS, errh))
+return OCI_ERROR;
+
+
+16. SQLT_CUR
+
+游标
+#define SQLT_CUR  102                                        /* cursor  type */
+
+
+
+17. SQLT_RSET
+
+#define SQLT_RSET 116                                     /* result set type */
+
+
+18. SQLT_UIN
+
+#define SQLT_UIN  68                                     /* unsigned integer */
+
+odbc 对应 SQL_INTEGER
+
+SQLUINTEGER
+
+
+19. SQLT_ODT
+
+#define SQLT_ODT  156                                        /* OCIDate type */
+
+OCIDate SQLT_ODT
+
+20. OCI_DTYPE_LOB
+
+#define OCI_DTYPE_LOB 50                                     /* lob  locator */
+
+21. OCI_ONE_PIECE
+
+#define OCI_ONE_PIECE 0                                         /* one piece */
+
+22. SQLCS_IMPLICIT
+#define SQLCS_IMPLICIT 1     /* for CHAR, VARCHAR2, CLOB w/o a specified set */
+
+The LOB character set form of the buffer data. csfrm has two possible nonzero values:
+■ SQLCS_IMPLICIT - database character set ID, to create a CLOB. OCI_DEFAULT can also
+be used to implicitly create a CLOB.
+■ SQLCS_NCHAR - NCHAR character set ID, to create an NCLOB.
+The default value is SQLCS_IMPLICIT
+
+23. OCI_DTYPE_LOB
+
+#define OCI_DTYPE_LOB 50                                     /* lob  locator */
+
+
+示例：
+/* initialize single locator */
+one_lob = OCIDescriptorAlloc(...OCI_DTYPE_LOB...);
