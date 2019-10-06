@@ -2,9 +2,9 @@
 https://blog.csdn.net/QIAOSHOUXING/article/details/8231624
 :: 讲了OCI基础内容，很详细
 
-OCI常用函数说明
-https://blog.csdn.net/it_mmmjie/article/details/78887404
-:: 可以看下
+学习OCI编程
+https://max.book118.com/html/2017/1211/143680161.shtm
+:: 很好
 
 Call Interface Programmer's Guide
 https://docs.oracle.com/cd/B28359_01/appdev.111/b28395/toc.htm
