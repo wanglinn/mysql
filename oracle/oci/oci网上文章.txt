@@ -4,7 +4,7 @@ https://blog.csdn.net/QIAOSHOUXING/article/details/8231624
 
 学习OCI编程
 https://max.book118.com/html/2017/1211/143680161.shtm
-:: 很好
+:: 很好， 内容同上面 "关于OCI编程基础的学习（一）"
 
 Call Interface Programmer's Guide
 https://docs.oracle.com/cd/B28359_01/appdev.111/b28395/toc.htm
