@@ -12,4 +12,10 @@ oracle 11.1
 :: oracle oci 官方文档，非常好
 
 
+EDB 介绍 OCI
+https://www.enterprisedb.com/edb-docs/d/edb-postgres-connectors/user-guides/oci-guide/11.0.1/EDB_Postgres_Advanced_Server_OCI_Connector_Guide.1.12.html
+:: 各个函数及属性介绍的很详细
+
+
+
 
