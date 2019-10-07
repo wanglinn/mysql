@@ -17,5 +17,31 @@ https://www.enterprisedb.com/edb-docs/d/edb-postgres-connectors/user-guides/oci-
 :: 各个函数及属性介绍的很详细
 
 
+------------
+临时
+http://www.pudn.com/Download/item/id/1607043.html
+
+https://blog.csdn.net/gubenpeiyuan/article/details/11540521
+
+达梦(5)通过DCI实现增删改查
+https://www.2cto.com/database/201401/271003.html
+
+Call Interface Programmer's Guide 11.2 version
+https://docs.oracle.com/cd/E11882_01/appdev.112/e10646/oci04sql.htm#LNOCI040
+
+存储过程
+http://cn.voidcc.com/question/p-wxjiindb-nk.html
+
+游标
+https://docs.oracle.com/cd/B19306_01/appdev.102/b14250/oci05bnd.htm#i423493
+
+http://read.pudn.com/downloads99/sourcecode/windows/database/402662/oci-demo/nchdemo1.c__.htm
 
 
+http://www.pudn.com/Download/item/id/402662.html
+
+
+Oracle Call Interface Programmer's Guide 8.0 version
+https://docs.oracle.com/cd/A64702_01/doc/server.805/a58234/app_exam.htm
+
+---------
