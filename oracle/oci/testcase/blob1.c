@@ -29,8 +29,8 @@ int CheckErr(OCIError *pErr, sword lStatus);
 static text* dbname = (text*) "127.0.0.1:1521/dbsrv2";
 
 //用户及密码
-static text* username = (text*) "oci";
-static text* password = (text*) "ociOCI1111";
+static text* username = (text*) "user";
+static text* password = (text*) "password";
 
 static text* insert1 = (text*) "INSERT INTO testblob VALUES(1, empty_blob())";
 static text* update1 = (text*) "SELECT vb FROM testblob WHERE id=1 FOR UPDATE";
