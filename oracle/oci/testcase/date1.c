@@ -32,8 +32,8 @@ int CheckErr(OCIError *pErr, sword lStatus);
 static text* dbname = (text*) "127.0.0.1:1521/dbsrv2";
 
 //用户及密码
-static text* username = (text*) "oci";
-static text* password = (text*) "ociOCI1111";
+static text* username = (text*) "user";
+static text* password = (text*) "password";
 
 //DML(INSERT)操作的SQL语句
 static text* insertstr = (text*) "INSERT INTO date1  VALUES(1, :id2)";
