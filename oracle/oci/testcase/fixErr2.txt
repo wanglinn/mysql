@@ -13,6 +13,15 @@
 11. OCI_ATTR_LIST_SUBPROGRAMS
 12. OCI_ATTR_NUM_PARAMS
 13. OCI_ATTR_PTYPE
+14. OCI_PTYPE_PROC
+15.  OCI_ATTR_LIST_ARGUMENTS
+16. SQLT_CUR
+17. SQLT_RSET
+18. SQLT_UIN
+19. SQLT_ODT
+20. OCI_DTYPE_LOB
+21. OCI_ONE_PIECE
+22. SQLCS_IMPLICIT
 
 
 1. OCI_CONTINUE
@@ -329,17 +338,129 @@ if (OCIAttrGet((void *)parmh, OCI_DTYPE_PARAM, (void *)&arglst,
 (ub4 *)0, OCI_ATTR_LIST_ARGUMENTS, errh))
 return OCI_ERROR;
 
+见 oci 手册 212 页
+如下：
+P1 (arg1 emp.sal%type, arg2 emp%rowtype)
+...
+int i = 0, j = 0;
+text objptr[] = "add_job_history"; /* the name of a procedure to be described */
+ub4 objp_len = (ub4)strlen((char *)objptr);
+ub2 numargs = 0, numargs1, pos, level;
+text *name, *name1;
+ub4 namelen, namelen1;
+OCIParam *parmh = (OCIParam *) 0; /* parameter handle */
+OCIParam *arglst = (OCIParam *) 0; /* list of args */
+OCIParam *arg = (OCIParam *) 0; /* argument handle */
+OCIParam *arglst1 = (OCIParam *) 0; /* list of args */
+OCIParam *arg1 = (OCIParam *) 0; /* argument handle */
+OCIDescribe *dschp = (OCIDescribe *)0; /* describe handle */
+OCIHandleAlloc((void *)envhp, (void **)&dschp,
+ (ub4)OCI_HTYPE_DESCRIBE, (size_t)0, (void **)0);
+/* get the describe handle for the procedure */
+if (OCIDescribeAny(svch, errh, (void *)objptr, objp_len, OCI_OTYPE_NAME, 0,
+ OCI_PTYPE_PROC, dschp))
+ return OCI_ERROR;
+
+ /* get the parameter handle */
+if (OCIAttrGet((void *)dschp, OCI_HTYPE_DESCRIBE, (void *)&parmh, (ub4 *)0,
+ OCI_ATTR_PARAM, errh))
+ return OCI_ERROR;
+/* Get the number of arguments and the arg list */
+if (OCIAttrGet((void *)parmh, OCI_DTYPE_PARAM, (void *)&arglst,
+ (ub4 *)0, OCI_ATTR_LIST_ARGUMENTS, errh))
+ return OCI_ERROR;
+if (OCIAttrGet((void *)arglst, OCI_DTYPE_PARAM, (void *)&numargs, (ub4 *)0,
+ OCI_ATTR_NUM_PARAMS, errh))
+ return OCI_ERROR;
+/* For a procedure, we begin with i = 1; for a
+function, we begin with i = 0. */
+for (i = 1; i <= numargs; i++) {
+ OCIParamGet ((void *)arglst, OCI_DTYPE_PARAM, errh, (void **)&arg, (ub4)i);
+ namelen = 0;
+ OCIAttrGet((void *)arg, OCI_DTYPE_PARAM, (void *)&name, (ub4 *)&namelen,
+ OCI_ATTR_NAME, errh);
+ /* to print the attributes of the argument of type record
+ (arguments at the next level), traverse the argument list */
+ OCIAttrGet((void *)arg, OCI_DTYPE_PARAM, (void *)&arglst1, (ub4 *)0,
+ OCI_ATTR_LIST_ARGUMENTS, errh);
+ /* check if the current argument is a record. For arg1 in the procedure
+ arglst1 is NULL. */
+ if (arglst1) {
+ numargs1 = 0;
+ OCIAttrGet((void *)arglst1, OCI_DTYPE_PARAM, (void *)&numargs1, (ub4 *)0,
+ OCI_ATTR_NUM_PARAMS, errh);
+ /* Note that for both functions and procedures,the next higher level
+ arguments start from index 1. For arg2 in the procedure, the number of
+ arguments at the level 1 would be 2 */
+ for (j = 1; j <= numargs1; j++) {
+ OCIParamGet((void *)arglst1, OCI_DTYPE_PARAM, errh, (void **)&arg1,
+ (ub4)j);
+ namelen1 = 0;
+ OCIAttrGet((void *)arg1, OCI_DTYPE_PARAM, (void *)&name1, (ub4 *)&namelen1,
+ OCI_ATTR_NAME, errh);
+ }
+ }
+}
+if (dschp)
+ OCIHandleFree((void *) dschp, OCI_HTYPE_DESCRIBE);
+...
+
+OCI 见
+https://github.com/wanglinn/mysql/blob/master/oracle/oci/testcase/procedure1.c
+
+ODBC 见 
+https://github.com/wanglinn/odbc/blob/master/testcase/procedure3.c
 
 16. SQLT_CUR
 
 游标
 #define SQLT_CUR  102                                        /* cursor  type */
 
-
+在下面网页搜索 cursor
+https://docs.oracle.com/cd/E11882_01/appdev.112/e10646/oci04sql.htm#LNOCI16358
 
 17. SQLT_RSET
 
 #define SQLT_RSET 116                                     /* result set type */
+
+:: 涉及存储过程中使用游标
+
+PL/SQL REF CURSORs
+REF CURSOR variables ： SQLT_RSET 
+Allocate a statement handle, OCIStmt, and then bind its address, 
+OCIStmt **, using the SQLT_RSET datatype.
+
+
+示例：
+status = OCIStmtPrepare (stm1p, errhp, (text *) plsql_block,
+ strlen((char *)plsql_block), OCI_NTV_SYNTAX, OCI_DEFAULT);
+...
+status = OCIBindByName (stm1p, 
+                        (OCIBind **) &bnd1p,
+                        errhp,
+                        (text *)":cursor1",
+                        (sb4)strlen((char *)":cursor1"),
+                        (void *)&stm2p,
+                        (sb4) 0,
+                        SQLT_RSET, 
+                        (void *)0,
+                        (ub2 *)0,
+                        (ub2 *)0,
+                        (ub4)0,
+                        (ub4 *)0,
+                        (ub4)OCI_DEFAULT);
+
+status = OCIStmtPrepare (stm1p, errhp, (text *) nst_tab, 
+ strlen((char *)nst_tab), OCI_NTV_SYNTAX, OCI_DEFAULT);
+...
+status = OCIDefineByPos (stm1p, (OCIDefine **) &dfn2p, errhp, (ub4)2, 
+ (void *)&stm2p, (sb4)0, SQLT_RSET, (void *)0, (ub2 *)0,
+ (ub2 *)0, (ub4)OCI_DEFAULT);
+
+
+示例：
+http://cn.voidcc.com/question/p-wxjiindb-nk.html
+
 
 
 18. SQLT_UIN
@@ -357,9 +478,17 @@ SQLUINTEGER
 
 OCIDate SQLT_ODT
 
+OCI 测试用例
+https://github.com/wanglinn/mysql/blob/master/oracle/oci/testcase/date1.c
+
+
 20. OCI_DTYPE_LOB
 
 #define OCI_DTYPE_LOB 50                                     /* lob  locator */
+
+示例：
+/* initialize single locator */
+one_lob = OCIDescriptorAlloc(...OCI_DTYPE_LOB...);
 
 21. OCI_ONE_PIECE
 
@@ -374,11 +503,3 @@ be used to implicitly create a CLOB.
 ■ SQLCS_NCHAR - NCHAR character set ID, to create an NCLOB.
 The default value is SQLCS_IMPLICIT
 
-23. OCI_DTYPE_LOB
-
-#define OCI_DTYPE_LOB 50                                     /* lob  locator */
-
-
-示例：
-/* initialize single locator */
-one_lob = OCIDescriptorAlloc(...OCI_DTYPE_LOB...);
