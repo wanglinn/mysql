@@ -1,0 +1,44 @@
+-- https://blog.csdn.net/cdrcsy/article/details/73278760
+-- 使用流程控制
+
+-- create table
+create table sp_t4(id1 int, id2 int);
+insert into sp_t4 values(1,11);
+insert into sp_t4 values(2,12);
+insert into sp_t4 values(3,13);
+insert into sp_t4 values(4,14);
+insert into sp_t4 values(5,15);
+insert into sp_t4 values(6,16);
+
+-- create procedure pro_flow_control1
+drop procedure if exists pro_flow_control1;
+
+DELIMITER ;;
+
+create procedure pro_flow_control1(in i_id1 int)
+BEGIN
+if i_id1 > 5 then
+    select * from sp_t4 where id1 > 5;
+else
+    select * from sp_t4 where id1 <= 5;
+end if;
+
+END ;;
+
+DELIMITER ;
+
+-- test
+
+call pro_flow_control1();  -- error
+call pro_flow_control1(-1);
+call pro_flow_control1(5);
+call pro_flow_control1(6);
+call pro_flow_control1(115);
+
+-- clean
+drop table sp_t4;
+drop procedure pro_flow_control1;
+
+
+
+
