@@ -1,0 +1,51 @@
+-- testcase3
+-- 在存储过程中可以使用游标对结果集进行循环处理
+
+-- create table
+create table t3(id1 int, id2 int);
+insert into t3 values(1,11);
+insert into t3 values(2,12);
+insert into t3 values(3,13);
+insert into t3 values(4,14);
+insert into t3 values(5,15);
+insert into t3 values(6,16);
+
+-- create procedure pro_cursor1
+drop procedure if exists pro_cursor1;
+
+DELIMITER ;;
+
+CREATE PROCEDURE pro_cursor1()
+BEGIN
+DECLARE i_id1 INT;
+DECLARE cur_test CURSOR FOR SELECT id1 FROM t3;
+DECLARE EXIT HANDLER FOR NOT FOUND CLOSE cur_test;
+
+SET @x31=0;
+SET @x32=0;
+OPEN cur_test;
+REPEAT
+FETCH cur_test INTO i_id1;
+select i_id1;
+
+SET @x31 = @x31 + i_id1;
+SET @x32 = @x32 + 1;
+UNTIL 0 END REPEAT;
+
+CLOSE cur_test;
+
+END ;;
+
+DELIMITER ;
+
+-- test
+call pro_cursor1();
+select @x31, @x32;
+
+-- clean
+drop table t3;
+drop procedure pro_cursor1;
+
+
+
+
