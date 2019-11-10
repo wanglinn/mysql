@@ -1,0 +1,39 @@
+-- testcase1  
+-- 未使用条件定义处理程序
+
+-- create table t1
+create table t1(id1 int, id2 int);
+insert into t1 values(1,11);
+insert into t1 values(2,12);
+
+-- create procedure pro_condition
+drop procedure if exists pro_condition;
+
+delimiter ;;
+create procedure pro_condition()
+begin
+set @x=1;
+select * from t1;
+set @x=2;
+end ;;
+
+delimiter ;
+
+-- test
+select @x;
+call pro_condition();
+select @x;
+
+
+-- drop table
+drop table t1;
+-- drop pro_condition
+drop procedure pro_condition;
+
+
+
+
+
+
+
+
