@@ -1,0 +1,72 @@
+文件 connection_handler_per_thread.cc
+
+handle_connection
+
+
+#0  do_command (thd=thd@entry=0x7f7ca8012280) at /home/wl/software/mysql-5.7.26/sql/sql_parse.cc:912
+#1  0x0000000000d583e8 in handle_connection (arg=arg@entry=0x2718b90) at /home/wl/software/mysql-5.7.26/sql/conn_handler/connection_handler_per_thread.cc:306
+#2  0x0000000001222ec1 in pfs_spawn_thread (arg=0x262c100) at /home/wl/software/mysql-5.7.26/storage/perfschema/pfs.cc:2190
+#3  0x00007f7cbcae2dd5 in start_thread () from /lib64/libpthread.so.0
+#4  0x00007f7cbb9aa02d in clone () from /lib64/libc.so.6
+
+
+net_new_transaction(net); ->  dispatch_command
+do_comamnd
+
+
+
+void PROFILING::start_new_query(const char *initial_state)
+
+
+thd->set_query_id(next_query_id());
+
+
+bool alloc_query(THD *thd, const char *packet, size_t packet_length)
+
+
+(gdb) p query
+$28 = <optimized out>
+
+
+#0  invoke_pre_parse_rewrite_plugins (thd=thd@entry=0x7f7ca4012450) at /home/wl/software/mysql-5.7.26/sql/sql_query_rewrite.cc:76
+#1  0x0000000000c9a011 in mysql_parse (thd=thd@entry=0x7f7ca4012450, parser_state=parser_state@entry=0x7f7cb54807a0)
+    at /home/wl/software/mysql-5.7.26/sql/sql_parse.cc:5443
+#2  0x0000000000c9ae64 in dispatch_command (thd=thd@entry=0x7f7ca4012450, com_data=com_data@entry=0x7f7cb5480e00, command=COM_QUERY)
+    at /home/wl/software/mysql-5.7.26/sql/sql_parse.cc:1484
+#3  0x0000000000c9c7b7 in do_command (thd=thd@entry=0x7f7ca4012450) at /home/wl/software/mysql-5.7.26/sql/sql_parse.cc:1025
+#4  0x0000000000d583e8 in handle_connection (arg=arg@entry=0x2718b90) at /home/wl/software/mysql-5.7.26/sql/conn_handler/connection_handler_per_thread.cc:306
+#5  0x0000000001222ec1 in pfs_spawn_thread (arg=0x26646d0) at /home/wl/software/mysql-5.7.26/storage/perfschema/pfs.cc:2190
+#6  0x00007f7cbcae2dd5 in start_thread () from /lib64/libpthread.so.0
+#7  0x00007f7cbb9aa02d in clone () from /lib64/libc.so.6
+
+
+
+Query_cache::send_result_to_client
+
+if ((my_toupper(system_charset_info, sql.str[i])     != 'S' || 
+(gdb) p sql
+$33 = (const LEX_CSTRING &) @0x7f7ca4012628: {str = 0x7f7ca4001448 "select @@version_comment limit 1", length = 32}
+(gdb) f 0
+#0  Query_cache::send_result_to_client (this=0x1e22980 <query_cache>, thd=thd@entry=0x7f7ca4012450, sql=...) at /home/wl/software/mysql-5.7.26/sql/sql_cache.cc:1608
+(gdb) f 1
+#1  0x0000000000c9a03d in mysql_parse (thd=thd@entry=0x7f7ca4012450, parser_state=parser_state@entry=0x7f7cb54807a0)
+    at /home/wl/software/mysql-5.7.26/sql/sql_parse.cc:5448
+(gdb) 
+
+
+mysql_execute_command (thd=thd@entry=0x7f7ca4012450, first_level=first_level@entry=true) at /home/wl/software/mysql-5.7.26/sql/sql_parse.cc:2446
+(gdb) bt
+#0  mysql_execute_command (thd=thd@entry=0x7f7ca4012450, first_level=first_level@entry=true) at /home/wl/software/mysql-5.7.26/sql/sql_parse.cc:2446
+#1  0x0000000000c9a36d in mysql_parse (thd=thd@entry=0x7f7ca4012450, parser_state=parser_state@entry=0x7f7cb54807a0)
+    at /home/wl/software/mysql-5.7.26/sql/sql_parse.cc:5570
+#2  0x0000000000c9ae64 in dispatch_command (thd=thd@entry=0x7f7ca4012450, com_data=com_data@entry=0x7f7cb5480e00, command=COM_QUERY)
+    at /home/wl/software/mysql-5.7.26/sql/sql_parse.cc:1484
+#3  0x0000000000c9c7b7 in do_command (thd=thd@entry=0x7f7ca4012450) at /home/wl/software/mysql-5.7.26/sql/sql_parse.cc:1025
+#4  0x0000000000d583e8 in handle_connection (arg=arg@entry=0x2718b90) at /home/wl/software/mysql-5.7.26/sql/conn_handler/connection_handler_per_thread.cc:306
+#5  0x0000000001222ec1 in pfs_spawn_thread (arg=0x26646d0) at /home/wl/software/mysql-5.7.26/storage/perfschema/pfs.cc:2190
+#6  0x00007f7cbcae2dd5 in start_thread () from /lib64/libpthread.so.0
+#7  0x00007f7cbb9aa02d in clone () from /lib64/libc.so.6
+
+
+
+
