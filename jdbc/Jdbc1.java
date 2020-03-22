@@ -20,7 +20,7 @@ public class Jdbc1 {
             
             String sql = "select * from t2";
             PreparedStatement stmt = conn.prepareStatement(sql);
-            ResultSet rs = stmt.executeQuery(sql);
+            ResultSet rs = stmt.executeQuery();
             ResultSetMetaData data = rs.getMetaData();
             while (rs.next()) {
                 for (int i = 1; i <= data.getColumnCount(); i++) {
