@@ -93,7 +93,7 @@ public class Jdbc1 {
                 }
             }
         } catch (SQLException e) {
-            System.out.println("数据库连接失败");
+            e.printStackTrace();
         }
     }
 }
