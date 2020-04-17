@@ -12,7 +12,7 @@ select user, host from user;
 # 更新密码
 ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'password';  
 
-
+my.cnf 文件 bind-address 设置多个ip （用空格隔开）
 
 
 
