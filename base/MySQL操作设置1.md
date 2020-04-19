@@ -16,7 +16,7 @@ my.cnf 文件 bind-address 设置多个ip （用空格隔开）
 
 ## 3 debug
 源码 -DWITH_DEBUG=1  
-环境变量   export MYSQL_DEBUG=d:t:O,/home/wl/mysqlcluster/client.trace  
+环境变量   export MYSQL_DEBUG=d:t:i:f:L:n:P:F:N:p:O,/home/wl/mysqlcluster/client.trace  
 或者 mysql 连接数据库时加上 --debug 默认路径/tmp/client.trace  
 
 https://dev.mysql.com/doc/refman/5.7/en/dbug-package.html  
