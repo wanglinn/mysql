@@ -88,7 +88,7 @@ ERROR 1292 (22007): Incorrect datetime value: '1970-01-01 00:00:01.0000' for col
   Convert time in MYSQL_TIME representation in system time zone to its  
   my_time_t form (number of seconds in UTC since begginning of Unix Epoch).  
 假设让设计个该函数思路为：
-以 1970-01-01 00:00:00 为起点，计算给定的value 相对起点的数值并算上时区及本地时间的影响，若超过
+以 1970-01-01 00:00:00 为起点，计算给定的value 相对起点的数值并算上时区及本地时间(select 查询显示的对应本地时间)的影响，若超过
 最大值则报错。
 
 堆栈信息  
@@ -146,4 +146,54 @@ $124 = {
   second_part = 0, 
   neg = 0 '\000', 
   time_type = MYSQL_TIMESTAMP_DATETIME
+```
+
+
+# 3. 表数据中实际存储的是utc时间
+```
+在这个函数中将用户输入的时间转化为utc时间  
+ Converts local time in time zone described as offset from UTC  
+  from MYSQL_TIME representation to its my_time_t representation.  
+
+my_time_t  
+Time_zone_offset::TIME_to_gmt_sec(const MYSQL_TIME *t, my_bool *in_dst_time_gap) const  
+
+语句：local_t= sec_since_epoch(t->year, t->month, (t->day - shift), t->hour, t->minute, t->second) - offset;  
+其中 offset 对应 设置的 set time_zone = '+2:00'; 则offset =2*3600
+这样实际存储的是时区为0对应的时间。
+
+
+#0  TIME_to_timestamp (thd=0x7fb0d8001960, t=0x7fb0f685bcb0, in_dst_time_gap=0x7fb0f685bbbf "") at /home/user1/software/mysql-5.7.26/sql/sql_time.cc:633
+#1  0x00000000015dad97 in datetime_with_no_zero_in_date_to_timeval (thd=0x7fb0d8001960, ltime=0x7fb0f685bcb0, tm=0x7fb0f685bc30, warnings=0x7fb0f685bce0)
+    at /home/user1/software/mysql-5.7.26/sql/sql_time.cc:686
+#2  0x0000000000eff4ba in Field_temporal_with_date_and_time::convert_TIME_to_timestamp (this=0x7fb0d80097d0, thd=0x7fb0d8001960, ltime=0x7fb0f685bcb0, 
+    tm=0x7fb0f685bc30, warnings=0x7fb0f685bce0) at /home/user1/software/mysql-5.7.26/sql/field.cc:5591
+#3  0x0000000000f00015 in Field_timestampf::store_internal (this=0x7fb0d80097d0, ltime=0x7fb0f685bcb0, warnings=0x7fb0f685bce0)
+    at /home/user1/software/mysql-5.7.26/sql/field.cc:5942
+#4  0x0000000000eff1af in Field_temporal_with_date::store_internal_with_round (this=0x7fb0d80097d0, ltime=0x7fb0f685bcb0, warnings=0x7fb0f685bce0)
+    at /home/user1/software/mysql-5.7.26/sql/field.cc:5527
+#5  0x0000000000efe28d in Field_temporal::store (this=0x7fb0d80097d0, str=0x7fb0d8006d00 "2020-01-01 00:00:01", len=19, cs=0x2d070e0 <my_charset_utf8mb4_general_ci>)
+    at /home/user1/software/mysql-5.7.26/sql/field.cc:5273
+#6  0x0000000000f48e09 in Item::save_str_value_in_field (this=0x7fb0d8006d18, field=0x7fb0d80097d0, result=0x7fb0d8006d28)
+    at /home/user1/software/mysql-5.7.26/sql/item.cc:561
+#7  0x0000000000f5aee2 in Item_string::save_in_field_inner (this=0x7fb0d8006d18, field=0x7fb0d80097d0, no_conversions=false)
+    at /home/user1/software/mysql-5.7.26/sql/item.cc:6900
+#8  0x0000000000f5a48c in Item::save_in_field (this=0x7fb0d8006d18, field=0x7fb0d80097d0, no_conversions=false) at /home/user1/software/mysql-5.7.26/sql/item.cc:6757
+#9  0x00000000014c31ee in fill_record (thd=0x7fb0d8001960, table=0x7fb0d8020240, ptr=0x7fb0d802bd00, values=..., bitmap=0x0, insert_into_fields_bitmap=0x0)
+    at /home/user1/software/mysql-5.7.26/sql/sql_base.cc:9653
+#10 0x00000000014c34c3 in fill_record_n_invoke_before_triggers (thd=0x7fb0d8001960, ptr=0x7fb0d802bcf0, values=..., table=0x7fb0d8020240, event=TRG_EVENT_INSERT, 
+    num_fields=2) at /home/user1/software/mysql-5.7.26/sql/sql_base.cc:9735
+#11 0x000000000175dec4 in Sql_cmd_insert::mysql_insert (this=0x7fb0d8007470, thd=0x7fb0d8001960, table_list=0x7fb0d8006ea0)
+    at /home/user1/software/mysql-5.7.26/sql/sql_insert.cc:751
+#12 0x000000000176484f in Sql_cmd_insert::execute (this=0x7fb0d8007470, thd=0x7fb0d8001960) at /home/user1/software/mysql-5.7.26/sql/sql_insert.cc:3118
+#13 0x000000000153c891 in mysql_execute_command (thd=0x7fb0d8001960, first_level=true) at /home/user1/software/mysql-5.7.26/sql/sql_parse.cc:3596
+#14 0x0000000001541fc3 in mysql_parse (thd=0x7fb0d8001960, parser_state=0x7fb0f685d690) at /home/user1/software/mysql-5.7.26/sql/sql_parse.cc:5577
+#15 0x0000000001537a0e in dispatch_command (thd=0x7fb0d8001960, com_data=0x7fb0f685ddf0, command=COM_QUERY) at /home/user1/software/mysql-5.7.26/sql/sql_parse.cc:1484
+#16 0x0000000001536942 in do_command (thd=0x7fb0d8001960) at /home/user1/software/mysql-5.7.26/sql/sql_parse.cc:1025
+#17 0x0000000001666f42 in handle_connection (arg=0x4ed5940) at /home/user1/software/mysql-5.7.26/sql/conn_handler/connection_handler_per_thread.cc:306
+#18 0x0000000001cf22f4 in pfs_spawn_thread (arg=0x5049810) at /home/user1/software/mysql-5.7.26/storage/perfschema/pfs.cc:2190
+#19 0x00007fb1024f4dd5 in start_thread () from /lib64/libpthread.so.0
+#20 0x00007fb1011ba02d in clone () from /lib64/libc.so.6
+(gdb) 
+
 ```
