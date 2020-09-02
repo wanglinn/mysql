@@ -4,6 +4,7 @@ int2store函数使用分析
 
 # 1. 文件 my_byteorder.h
 
+```
 /*
   Functions for reading and storing in machine independent
   format (low byte first). There are 'korr' (assume 'corrector') variants
@@ -41,8 +42,10 @@ static inline void int4store(char *pT, uint32 A)
 
 #endif  /* __cplusplus */
 
+```
 # 2. 文件 byte_order_generic_x86.h 
 
+```
 static inline void int2store(uchar *T, uint16 A) SUPPRESS_UBSAN;
 static inline void int2store(uchar *T, uint16 A)
 {
@@ -55,8 +58,10 @@ static inline void int4store(uchar *T, uint32 A)
   *((uint32*) T)= A;
 }
 
+```
 # 3. 文件 byte_order_generic.h 
 
+```
 static inline void int2store(uchar *T, uint16 A)
 {
   uint def_temp= A ;
@@ -71,3 +76,4 @@ static inline void int4store(uchar *T, uint32 A)
   *(T+2)=(uchar) (A >> 16);
   *(T+3)=(uchar) (A >> 24);
 }
+```
