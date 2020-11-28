@@ -2,7 +2,7 @@
 目的：分析获取where 条件中对应的字段名及字段值
 
 # 1. 语句 select sql_no_cache * from t1 where id1=1;
-
+```
 (gdb) p thd->lex->select_lex->m_where_cond->type()
 $3 = Item::FUNC_ITEM
 (gdb) p thd->lex->select_lex->m_where_cond
@@ -141,10 +141,10 @@ p ((Item_func *)(thd->lex->select_lex->m_where_cond))->args[1]->item_name->m_str
 $27 = 0x7f1240006558 "1"
 
 
-
+```
 # 2. 语句  select sql_no_cache * from t1 where id1=1 and id2=1;
 
-
+```
 (gdb) p thd->lex->select_lex->m_where_cond
 $30 = (Item_cond_and *) 0x7f12400068f8
 
@@ -203,6 +203,6 @@ $40 = {
 }
 
 
-
+```
 
 
