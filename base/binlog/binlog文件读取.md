@@ -1,6 +1,13 @@
 # binlog 文件作用
 mysql提供了binlog功能，任何对数据库的增删改操作及DDL操作都会记录在binlog中；数据库的主备复制当前（5.7、8.0版本）也是基于binlog进行的。  
 
+# 提出问题
+1. binlog可以理解为记录数据库操作语句的存储的文件，执行的语句有多种类别，是否记录也分为不同的类别进行记录？  
+2. binlog 记录事件的格式分为哪几种，有什么区别？  
+3. 记录事件时怎么来获取该事件对应的长度？是否有结束标志类似的信息还是有记录长度的信息？  
+4. 如何根据binlog信息进行回滚操作？ 可以根据insert、update、delete、truncate 进行分别说明
+5. binlog 写记录是在什么时候进行的？ binlog 、 undo 、 redo 、表数据文件 这几个顺序?
+
 # binlog 涉及的开关及格式
 log_bin                   -- binlog是否开启开关  
 binlog_format             -- binlog格式：statement, row, mixed  
