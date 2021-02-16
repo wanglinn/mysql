@@ -1,5 +1,6 @@
 # binlog 文件作用
-    mysql提供了binlog功能，任何对数据库的增删改操作及DDL操作都会记录在binlog中；数据库的主备复制当前（5.7、8.0版本）也是基于binlog进行的。  
+mysql提供了binlog功能，任何对数据库的增删改操作及DDL操作都会记录在binlog中；数据库的主备复制当前（5.7、8.0版本）也是基于binlog进行的。  
+
 # binlog 涉及的开关及格式
 log_bin                   -- binlog是否开启开关  
 binlog_format             -- binlog格式：statement, row, mixed  
