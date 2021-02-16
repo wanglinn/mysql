@@ -217,6 +217,203 @@ mysql> show binlog events in 'mysql-bin.000117';
 +------------------+------+----------------+-----------+-------------+---------------------------------------------+
 28 rows in set (0.01 sec)
 ```
+# binlog 格式为row
+
+```
+mysql> show variables like '%binlog_format';
++---------------+-------+
+| Variable_name | Value |
++---------------+-------+
+| binlog_format | ROW   |
++---------------+-------+
+1 row in set (0.00 sec)
+
+mysql> use  db1;
+Reading table information for completion of table and column names
+You can turn off this feature to get a quicker startup with -A
+
+Database changed
+mysql> truncate t1;
+Query OK, 0 rows affected (0.02 sec)
+
+mysql> insert into t1 values(1,1);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> show binlog events in 'mysql-bin.000118';
++------------------+-----+----------------+-----------+-------------+---------------------------------------------+
+| Log_name         | Pos | Event_type     | Server_id | End_log_pos | Info                                        |
++------------------+-----+----------------+-----------+-------------+---------------------------------------------+
+| mysql-bin.000118 |   4 | Format_desc    |         1 |         123 | Server ver: 5.7.26-debug-log, Binlog ver: 4 |
+| mysql-bin.000118 | 123 | Previous_gtids |         1 |         154 |                                             |
+| mysql-bin.000118 | 154 | Anonymous_Gtid |         1 |         219 | SET @@SESSION.GTID_NEXT= 'ANONYMOUS'        |
+| mysql-bin.000118 | 219 | Query          |         1 |         296 | use `db1`; truncate t1                      |
+| mysql-bin.000118 | 296 | Anonymous_Gtid |         1 |         361 | SET @@SESSION.GTID_NEXT= 'ANONYMOUS'        |
+| mysql-bin.000118 | 361 | Query          |         1 |         432 | BEGIN                                       |
+| mysql-bin.000118 | 432 | Table_map      |         1 |         477 | table_id: 114 (db1.t1)                      |
+| mysql-bin.000118 | 477 | Write_rows     |         1 |         521 | table_id: 114 flags: STMT_END_F             |
+| mysql-bin.000118 | 521 | Xid            |         1 |         552 | COMMIT /* xid=15 */                         |
++------------------+-----+----------------+-----------+-------------+---------------------------------------------+
+9 rows in set (0.00 sec)
+
+后面又执行了一些操作...
+
+[wl@host122 data]$ mysqlbinlog --no-defaults --base64-output=decode-rows  mysql-bin.000118 -v
+/*!50530 SET @@SESSION.PSEUDO_SLAVE_MODE=1*/;
+/*!50003 SET @OLD_COMPLETION_TYPE=@@COMPLETION_TYPE,COMPLETION_TYPE=0*/;
+DELIMITER /*!*/;
+# at 4
+#210216 12:46:45 server id 1  end_log_pos 123 CRC32 0x2056db8d  Start: binlog v 4, server v 5.7.26-debug-log created 210216 12:46:45 at startup
+# Warning: this binlog is either in use or was not closed properly.
+ROLLBACK/*!*/;
+# at 123
+#210216 12:46:45 server id 1  end_log_pos 154 CRC32 0x42c28e90  Previous-GTIDs
+# [empty]
+# at 154
+#210216 12:47:03 server id 1  end_log_pos 219 CRC32 0x355f8700  Anonymous_GTID  last_committed=0        sequence_number=1       rbr_only=no
+SET @@SESSION.GTID_NEXT= 'ANONYMOUS'/*!*/;
+# at 219
+#210216 12:47:03 server id 1  end_log_pos 296 CRC32 0x1fcc0cdb  Query   thread_id=2     exec_time=0     error_code=0
+use `db1`/*!*/;
+SET TIMESTAMP=1613450823/*!*/;
+SET @@session.pseudo_thread_id=2/*!*/;
+SET @@session.foreign_key_checks=1, @@session.sql_auto_is_null=0, @@session.unique_checks=1, @@session.autocommit=1/*!*/;
+SET @@session.sql_mode=1436549152/*!*/;
+SET @@session.auto_increment_increment=1, @@session.auto_increment_offset=1/*!*/;
+/*!\C utf8mb4 *//*!*/;
+SET @@session.character_set_client=45,@@session.collation_connection=45,@@session.collation_server=45/*!*/;
+SET @@session.lc_time_names=0/*!*/;
+SET @@session.collation_database=DEFAULT/*!*/;
+truncate t1
+/*!*/;
+# at 296
+#210216 12:47:09 server id 1  end_log_pos 361 CRC32 0x6a88fd11  Anonymous_GTID  last_committed=1        sequence_number=2       rbr_only=yes
+/*!50718 SET TRANSACTION ISOLATION LEVEL READ COMMITTED*//*!*/;
+SET @@SESSION.GTID_NEXT= 'ANONYMOUS'/*!*/;
+# at 361
+#210216 12:47:09 server id 1  end_log_pos 432 CRC32 0x4ade8664  Query   thread_id=2     exec_time=0     error_code=0
+SET TIMESTAMP=1613450829/*!*/;
+BEGIN
+/*!*/;
+# at 432
+#210216 12:47:09 server id 1  end_log_pos 477 CRC32 0xd2c00cf0  Table_map: `db1`.`t1` mapped to number 114
+# at 477
+#210216 12:47:09 server id 1  end_log_pos 521 CRC32 0x32810d99  Write_rows: table id 114 flags: STMT_END_F
+### INSERT INTO `db1`.`t1`
+### SET
+###   @1=1
+###   @2=1
+# at 521
+#210216 12:47:09 server id 1  end_log_pos 552 CRC32 0x23be7c04  Xid = 15
+COMMIT/*!*/;
+# at 552
+#210216 12:54:02 server id 1  end_log_pos 617 CRC32 0x6520e86f  Anonymous_GTID  last_committed=2        sequence_number=3       rbr_only=yes
+/*!50718 SET TRANSACTION ISOLATION LEVEL READ COMMITTED*//*!*/;
+SET @@SESSION.GTID_NEXT= 'ANONYMOUS'/*!*/;
+# at 617
+#210216 12:54:02 server id 1  end_log_pos 688 CRC32 0xc9b3241a  Query   thread_id=3     exec_time=0     error_code=0
+SET TIMESTAMP=1613451242/*!*/;
+BEGIN
+/*!*/;
+# at 688
+#210216 12:54:02 server id 1  end_log_pos 733 CRC32 0x341df0e3  Table_map: `db1`.`t1` mapped to number 114
+# at 733
+#210216 12:54:02 server id 1  end_log_pos 787 CRC32 0x54890e68  Update_rows: table id 114 flags: STMT_END_F
+### UPDATE `db1`.`t1`
+### WHERE
+###   @1=1
+###   @2=1
+### SET
+###   @1=2
+###   @2=1
+# at 787
+#210216 12:54:02 server id 1  end_log_pos 818 CRC32 0xedab9413  Xid = 30
+COMMIT/*!*/;
+# at 818
+#210216 12:54:37 server id 1  end_log_pos 883 CRC32 0x58740890  Anonymous_GTID  last_committed=3        sequence_number=4       rbr_only=yes
+/*!50718 SET TRANSACTION ISOLATION LEVEL READ COMMITTED*//*!*/;
+SET @@SESSION.GTID_NEXT= 'ANONYMOUS'/*!*/;
+# at 883
+#210216 12:54:37 server id 1  end_log_pos 954 CRC32 0xb5d5754b  Query   thread_id=4     exec_time=0     error_code=0
+SET TIMESTAMP=1613451277/*!*/;
+BEGIN
+/*!*/;
+# at 954
+#210216 12:54:37 server id 1  end_log_pos 999 CRC32 0x47a45fe0  Table_map: `db1`.`t1` mapped to number 114
+# at 999
+#210216 12:54:37 server id 1  end_log_pos 1070 CRC32 0x376bc03f         Write_rows: table id 114 flags: STMT_END_F
+### INSERT INTO `db1`.`t1`
+### SET
+###   @1=2
+###   @2=2
+### INSERT INTO `db1`.`t1`
+### SET
+###   @1=3
+###   @2=3
+### INSERT INTO `db1`.`t1`
+### SET
+###   @1=4
+###   @2=4
+### INSERT INTO `db1`.`t1`
+### SET
+###   @1=5
+###   @2=5
+# at 1070
+#210216 12:54:37 server id 1  end_log_pos 1101 CRC32 0x9eda2748         Xid = 44
+COMMIT/*!*/;
+# at 1101
+#210216 12:54:53 server id 1  end_log_pos 1166 CRC32 0xe32275e5         Anonymous_GTID  last_committed=4        sequence_number=5       rbr_only=yes
+/*!50718 SET TRANSACTION ISOLATION LEVEL READ COMMITTED*//*!*/;
+SET @@SESSION.GTID_NEXT= 'ANONYMOUS'/*!*/;
+# at 1166
+#210216 12:54:53 server id 1  end_log_pos 1237 CRC32 0xfb0640f2         Query   thread_id=4     exec_time=0     error_code=0
+SET TIMESTAMP=1613451293/*!*/;
+BEGIN
+/*!*/;
+# at 1237
+#210216 12:54:53 server id 1  end_log_pos 1282 CRC32 0x27505936         Table_map: `db1`.`t1` mapped to number 114
+# at 1282
+#210216 12:54:53 server id 1  end_log_pos 1390 CRC32 0x93ed8f4c         Update_rows: table id 114 flags: STMT_END_F
+### UPDATE `db1`.`t1`
+### WHERE
+###   @1=2
+###   @2=2
+### SET
+###   @1=3
+###   @2=2
+### UPDATE `db1`.`t1`
+### WHERE
+###   @1=3
+###   @2=3
+### SET
+###   @1=4
+###   @2=3
+### UPDATE `db1`.`t1`
+### WHERE
+###   @1=4
+###   @2=4
+### SET
+###   @1=5
+###   @2=4
+### UPDATE `db1`.`t1`
+### WHERE
+###   @1=5
+###   @2=5
+### SET
+###   @1=6
+###   @2=5
+# at 1390
+#210216 12:54:53 server id 1  end_log_pos 1421 CRC32 0x13584d15         Xid = 45
+COMMIT/*!*/;
+SET @@SESSION.GTID_NEXT= 'AUTOMATIC' /* added by mysqlbinlog */ /*!*/;
+DELIMITER ;
+# End of log file
+/*!50003 SET COMPLETION_TYPE=@OLD_COMPLETION_TYPE*/;
+/*!50530 SET @@SESSION.PSEUDO_SLAVE_MODE=0*/;
+
+这个本来时update t1 set id1 = id2+1 可以看出，上面对应了多个update语句。
+
+```
+
 # mysqlbinlog 源码解读
 涉及的源码文件： mysqlbinlog.cc  
 涉及的主要函数：  
